@@ -1,0 +1,242 @@
+// Single-screen in-game dashboard: the board fills the centre, the current
+// player's bar is pinned at the bottom, opponents sit in a compact strip, and
+// the log / cards / colonies live in slide-in drawers behind icons.
+
+.game-dashboard {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.game-dashboard-board {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-dashboard-left {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
+}
+
+.game-dashboard-sidebar {
+  z-index: 6;
+}
+
+.game-dashboard-actions {
+  flex: 0 0 auto;
+  max-height: 32vh;
+  overflow: auto;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.game-dashboard-bar {
+  flex: 0 0 auto;
+}
+
+// --- Bottom player bar ------------------------------------------------------
+
+.player-dashboard-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border-top: 1px solid #5a4a3a;
+}
+
+.dashboard-icons {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.dashboard-icon {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 52px;
+  padding: 4px 8px;
+  color: #ddd;
+  background: transparent;
+  border: 1px solid #5a4a3a;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.dashboard-icon:hover {
+  border-color: #b9935a;
+  color: #fff;
+}
+
+.dashboard-count {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.dashboard-icon-glyph {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.dashboard-icon-glyph--hand::before {
+  content: '🂠';
+}
+
+.dashboard-icon-glyph--played::before {
+  content: '🗂';
+}
+
+.dashboard-icon-glyph--colonies::before {
+  content: '🛰';
+}
+
+// --- Opponents strip --------------------------------------------------------
+
+.other-players-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.other-player-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 8px;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.other-player-entry:hover {
+  filter: brightness(1.2);
+}
+
+.other-player-entry-tr {
+  font-weight: bold;
+  margin-left: auto;
+}
+
+// --- Sidebar log icon -------------------------------------------------------
+
+.sidebar_icon--log {
+  cursor: pointer;
+}
+
+.sidebar_icon--log::before {
+  content: '🗒';
+  font-size: 20px;
+}
+
+// --- Drawer -----------------------------------------------------------------
+
+.drawer-root {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+}
+
+.drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.drawer-panel {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  background: #25201c;
+  border: 1px solid #5a4a3a;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+
+.drawer-panel--right {
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(560px, 92vw);
+  animation: drawer-slide-right 0.18s ease-out;
+}
+
+.drawer-panel--left {
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: min(560px, 92vw);
+  animation: drawer-slide-left 0.18s ease-out;
+}
+
+.drawer-panel--bottom {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-height: 72vh;
+  animation: drawer-slide-bottom 0.18s ease-out;
+}
+
+@keyframes drawer-slide-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes drawer-slide-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes drawer-slide-bottom {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid #5a4a3a;
+  flex: 0 0 auto;
+}
+
+.drawer-title {
+  font-size: 18px;
+  color: #fff;
+}
+
+.drawer-close {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  line-height: 1;
+  font-size: 22px;
+  color: #ddd;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.drawer-close:hover {
+  color: #fff;
+}
+
+.drawer-body {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 10px 12px;
+}

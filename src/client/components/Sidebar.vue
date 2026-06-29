@@ -41,6 +41,10 @@
       </div>
   </a>
 
+  <div class="sidebar_item sidebar_item_shortcut sidebar_item--log" :title="$t('Game log')" @click="$emit('toggle-log')">
+      <i class="sidebar_icon sidebar_icon--log"></i>
+  </div>
+
   <LanguageIcon/>
 
   <div class="sidebar_item sidebar_item--info" :title="$t('Information panel')">
@@ -87,6 +91,7 @@ import LanguageIcon from '@/client/components/LanguageIcon.vue';
 
 export default defineComponent({
   name: 'Sidebar',
+  emits: ['toggle-log'],
   props: {
     playerNumber: {
       type: Number,

@@ -88,6 +88,7 @@ const pluginRules = {
       'Bonus',
       'Card',
       'Colony',
+      'Drawer',
       'Help',
       'Milestone',
       'Milestones',
