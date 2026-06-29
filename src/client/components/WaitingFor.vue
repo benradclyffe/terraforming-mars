@@ -19,7 +19,12 @@
       </label>
       <div v-if="showRefresh()">Refresh<span class="reset"></span></div>
     </template>
-    <PlayerInputFactory :players="playerView.players"
+    <ActionMenu v-if="waitingfor.type === 'or' && waitingfor.menu === true"
+                          :playerView="asPlayerView"
+                          :playerinput="waitingfor"
+                          :onsave="onsave" />
+    <PlayerInputFactory v-else
+                          :players="playerView.players"
                           :playerView="playerView"
                           :playerinput="waitingfor"
                           :onsave="onsave"
@@ -51,6 +56,7 @@ import {INVALID_RUN_ID, AppErrorResponse} from '@/common/app/AppErrorId';
 import {Color} from '@/common/Color';
 import {gameDocumentTitle} from '../utils/documentTitle';
 import {setFaviconStatus, setFaviconTurnFrame} from '@/client/utils/favicon';
+import ActionMenu from '@/client/components/ActionMenu.vue';
 
 let ui_update_timeout_id: number | undefined;
 let documentTitleTimer: number | undefined;
@@ -76,6 +82,9 @@ const CANNOT_CONTACT_SERVER = 'Unable to reach the server. It may be restarting 
 
 export default defineComponent({
   name: 'WaitingFor',
+  components: {
+    ActionMenu,
+  },
   props: {
     playerView: {
       type: Object as () => ViewModel,
@@ -280,6 +289,11 @@ export default defineComponent({
   computed: {
     Phase(): typeof Phase {
       return Phase;
+    },
+    // The action menu only renders on a player's turn, so the view is always a
+    // PlayerViewModel (spectators never have a waitingFor to act on).
+    asPlayerView(): PlayerViewModel {
+      return this.playerView as PlayerViewModel;
     },
     preferences(): typeof getPreferences {
       return getPreferences;

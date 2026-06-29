@@ -6,8 +6,18 @@ import {OptionsInput} from './OptionsPlayerInput';
 import {InputError} from './InputError';
 
 export class OrOptions extends OptionsInput<undefined> {
+  // When true, this is the player's main turn-action menu (or initial-actions
+  // menu) and the client renders it as buttons opening modals, rather than the
+  // inline radio toggle-list.
+  public menu = false;
+
   constructor(...options: Array<PlayerInput>) {
     super('or', 'Select one option', options);
+  }
+
+  public setMenu(): this {
+    this.menu = true;
+    return this;
   }
 
   public toModel(player: IPlayer): OrOptionsModel {
@@ -20,6 +30,9 @@ export class OrOptions extends OptionsInput<undefined> {
     };
     if (initialIdx > -1) {
       model.initialIdx = initialIdx;
+    }
+    if (this.menu) {
+      model.menu = true;
     }
     return model;
   }

@@ -41,3 +41,61 @@
     color: red;
   }
 }
+
+// Action menu: the player's turn actions rendered as a row of buttons, each
+// opening a modal, instead of an inline radio toggle-list.
+.action-menu {
+  .action-menu-title {
+    font-size: 23px;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .action-menu-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+.action-menu-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 16px;
+}
+
+.action-menu-modal {
+  position: relative;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow: auto;
+  padding: 24px 20px 20px;
+  border-radius: 8px;
+  background: #25201c;
+  border: 1px solid #5a4a3a;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+
+  .action-menu-modal-close {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    line-height: 1;
+    font-size: 22px;
+    color: #ddd;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+  }
+
+  .action-menu-modal-close:hover {
+    color: #fff;
+  }
+}

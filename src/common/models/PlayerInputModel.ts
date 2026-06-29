@@ -30,6 +30,10 @@ export type OrOptionsModel = BaseInputModel & {
   // When set, initialIdx represents the option within `options` that should be
   // shows as the default selection.
   initialIdx?: number;
+  // Marks this as the player's main turn-action menu (or initial-actions menu).
+  // The client renders a marked menu as a row of buttons that each open a modal,
+  // rather than the inline radio toggle-list used for ordinary choices.
+  menu?: boolean;
 }
 
 export type SelectInitialCardsModel = BaseInputModel & {

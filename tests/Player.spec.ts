@@ -686,6 +686,20 @@ describe('Player', () => {
     });
   });
 
+  describe('action menu marker', () => {
+    it('getActions().toModel() marks the turn menu with menu: true', () => {
+      const [/* game */, player] = testGame(1);
+      const actions = cast(player.getActions(), OrOptions);
+      expect(actions.toModel(player).menu).is.true;
+    });
+
+    it('a regular OrOptions is not marked as a menu', () => {
+      const [/* game */, player] = testGame(1);
+      const options = new OrOptions(new SelectOption('a'), new SelectOption('b'));
+      expect(options.toModel(player).menu).is.undefined;
+    });
+  });
+
   it('run research phase', () => {
     const [game, player] = testGame(1, {skipInitialCardSelection: true});
     game.generation = 2;

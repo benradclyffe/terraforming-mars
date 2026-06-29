@@ -45,6 +45,32 @@ describe('WaitingFor', () => {
     expect(wrapper.text()).to.not.include('Not your turn');
   });
 
+  it('renders the action menu when waitingfor is a menu or-options', () => {
+    const wrapper = shallowMount(WaitingFor, {
+      ...globalConfig,
+      global: {
+        ...globalConfig.global,
+        stubs: {
+          'PlayerInputFactory': {template: '<div class="stub-pif"></div>'},
+          'ActionMenu': {template: '<div class="stub-action-menu"></div>'},
+        },
+      },
+      props: {
+        playerView: playerView as PlayerViewModel,
+        players: [thisPlayer as PublicPlayerModel],
+        waitingfor: {
+          type: 'or',
+          title: 'Take your next action',
+          buttonLabel: 'Take action',
+          menu: true,
+          options: [],
+        },
+      },
+    });
+    expect(wrapper.find('.stub-action-menu').exists()).to.be.true;
+    expect(wrapper.find('.stub-pif').exists()).to.be.false;
+  });
+
   it('shows "not your turn" when waitingfor is undefined', () => {
     const wrapper = shallowMount(WaitingFor, {
       ...globalConfig,

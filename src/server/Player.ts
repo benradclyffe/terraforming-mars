@@ -1513,7 +1513,7 @@ export class Player implements IPlayer {
     }
 
     if (this.pendingInitialActions.length > 0) {
-      const orOptions = new OrOptions();
+      const orOptions = new OrOptions().setMenu();
 
       this.pendingInitialActions.forEach((corp) => {
         const option = new SelectOption(
@@ -1555,6 +1555,7 @@ export class Player implements IPlayer {
 
   public /* for testing */ getActions() {
     const action = new OrOptions()
+      .setMenu()
       .setTitle(this.actionsTakenThisRound === 0 ? 'Take your first action' : 'Take your next action')
       .setButtonLabel('Take action');
 
