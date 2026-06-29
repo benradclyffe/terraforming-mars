@@ -699,6 +699,7 @@ describe('Player', () => {
       const playOption = actions.options.find((o) => o instanceof SelectProjectCardToPlay);
       const model = cast(playOption, SelectProjectCardToPlay).toModel(player);
       const names = model.cards.map((c) => c.name);
+      expect(model.playFromHand).to.equal(true);
       expect(names).to.include(CardName.POWER_PLANT);
       expect(names).to.include(CardName.RESEARCH);
       expect(model.cards.find((c) => c.name === CardName.POWER_PLANT)?.isDisabled).to.not.equal(true);

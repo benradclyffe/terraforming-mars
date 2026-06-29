@@ -82,9 +82,10 @@ export default defineComponent({
       if (option.type === 'card' && option.showOnlyInLearnerMode !== false && !getPreferences().learner_mode) {
         return;
       }
-      // The play-card option is offered through the cards icon (hand drawer),
-      // not as an action-row button.
-      if (option.type === 'projectCard') {
+      // The play-from-hand option is offered through the cards icon (hand
+      // drawer), not as an action-row button. Other 'projectCard' inputs (e.g.
+      // standard projects) still appear as buttons.
+      if (option.playFromHand === true) {
         return;
       }
       displayedOptions.push(option);

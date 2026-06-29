@@ -17,6 +17,10 @@ export interface PlayerInput {
     // client as a button on that resource's dashboard square.
     resourceSource?: Resource;
 
+    // When true, this is the "play a card from your hand" option, surfaced by
+    // the client through the cards icon rather than as an action-row button.
+    playFromHand?: boolean;
+
     // Contextual annotation identifying this PlayerInput.
     annotation: string | undefined;
     /**
@@ -59,6 +63,7 @@ export abstract class BasePlayerInput<T> implements PlayerInput {
   public annotation: string | undefined;
   public optional?: boolean;
   public resourceSource?: Resource;
+  public playFromHand?: boolean;
 
   public abstract toModel(player: IPlayer): PlayerInputModel;
   public abstract process(response: InputResponse, player: IPlayer): PlayerInput | undefined;
@@ -94,6 +99,11 @@ export abstract class BasePlayerInput<T> implements PlayerInput {
 
   public setResourceSource(resource: Resource) : this {
     this.resourceSource = resource;
+    return this;
+  }
+
+  public setPlayFromHand() : this {
+    this.playFromHand = true;
     return this;
   }
 

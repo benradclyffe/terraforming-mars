@@ -22,6 +22,11 @@ export type BaseInputModel = {
   // (e.g. heat -> temperature, plants -> greenery). The client surfaces it as a
   // button on that resource's square in the dashboard.
   resourceSource?: Resource;
+  // When true, this is the "play a card from your hand" option. The client
+  // surfaces it through the cards icon (hand drawer) rather than as an
+  // action-row button, distinguishing it from other 'projectCard' inputs such
+  // as the standard projects selector.
+  playFromHand?: boolean;
 }
 
 export type AndOptionsModel = BaseInputModel & {

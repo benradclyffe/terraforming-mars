@@ -103,7 +103,7 @@ describe('PlayerHome', () => {
     view.waitingFor = {
       type: 'or', title: 'Take your next action', menu: true,
       options: [
-        {type: 'projectCard', title: 'Play project card', buttonLabel: 'Play card', cards: []},
+        {type: 'projectCard', title: 'Play project card', buttonLabel: 'Play card', cards: [], playFromHand: true},
         {type: 'option', title: 'Pass', buttonLabel: 'Pass'},
       ],
     } as any;

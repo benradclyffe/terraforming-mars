@@ -1707,7 +1707,7 @@ export class Player implements IPlayer {
     if (playableCards.length !== 0) {
       const hand = this.cardsInHand;
       const enabled = hand.map((card) => playableCards.includes(card));
-      action.options.push(new SelectProjectCardToPlay(this, [...hand], {enabled}));
+      action.options.push(new SelectProjectCardToPlay(this, [...hand], {enabled}).setPlayFromHand());
     }
 
     // Trade with colonies

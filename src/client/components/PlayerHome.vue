@@ -346,7 +346,7 @@ export default defineComponent({
     playCardOption(): {option: SelectProjectCardToPlayModel, index: number} | undefined {
       const waitingFor = this.playerView.waitingFor;
       if (waitingFor?.type === 'or' && waitingFor.menu === true) {
-        const index = waitingFor.options.findIndex((o) => o.type === 'projectCard');
+        const index = waitingFor.options.findIndex((o) => o.playFromHand === true);
         if (index !== -1) {
           return {option: waitingFor.options[index] as SelectProjectCardToPlayModel, index};
         }
