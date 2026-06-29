@@ -1574,13 +1574,18 @@ export class Player implements IPlayer {
     }
 
     // Case 2: the card is one currently offered for selection (e.g. the initial
-    // cards / research buy screen, where it isn't in hand yet).
+    // cards / research buy screen, where it isn't in hand yet). Mutate the cards
+    // array in place: a SelectCard's array is often the same object as e.g.
+    // player.dealtProjectCards or the drawn-cards closure, so reassigning it
+    // would leave those other references (and the displayed list) stale.
     const selectCard = this.findSelectCardOffering(this.waitingFor, targetName);
     if (selectCard !== undefined) {
-      const target = selectCard.cards.find((card) => card.name === targetName);
-      if (target !== undefined) {
+      const cards = selectCard.cards as Array<ICard>;
+      const idx = cards.findIndex((card) => card.name === targetName);
+      if (idx !== -1) {
+        const target = cards[idx];
         const replacement = this.takeReplacementFromDeck(target, replacementName);
-        selectCard.cards = selectCard.cards.map((card) => (card.name === targetName ? replacement : card));
+        cards.splice(idx, 1, replacement);
         this.deckForCard(target).drawPile.push(target);
         return;
       }

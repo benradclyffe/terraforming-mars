@@ -724,16 +724,18 @@ describe('Player', () => {
       const [game, player] = testGame(1);
       const deck = game.projectDeck;
       const offered = [deck.drawOrThrow(game), deck.drawOrThrow(game)];
-      const replacement = deck.drawPile[0];
+      // Capture names up front: the swap mutates the offered array in place.
+      const targetName = offered[0].name;
+      const replacementName = deck.drawPile[0].name;
       const select = new SelectCard('Select cards to buy', 'Buy', offered, {min: 0, max: 2});
       player.setWaitingFor(select);
 
-      player.replaceDealtCard(offered[0].name, replacement.name);
+      player.replaceDealtCard(targetName, replacementName);
 
-      expect(select.cards.map((c) => c.name)).to.include(replacement.name);
-      expect(select.cards.map((c) => c.name)).to.not.include(offered[0].name);
-      expect(deck.drawPile.map((c) => c.name)).to.include(offered[0].name);
-      expect(deck.drawPile.map((c) => c.name)).to.not.include(replacement.name);
+      expect(select.cards.map((c) => c.name)).to.include(replacementName);
+      expect(select.cards.map((c) => c.name)).to.not.include(targetName);
+      expect(deck.drawPile.map((c) => c.name)).to.include(targetName);
+      expect(deck.drawPile.map((c) => c.name)).to.not.include(replacementName);
     });
 
     it('throws when the replacement is not in the deck', () => {
@@ -774,6 +776,10 @@ describe('Player', () => {
 
       expect(projectSelect.cards.map((c) => c.name)).to.include(replacement.name);
       expect(projectSelect.cards.map((c) => c.name)).to.not.include(target.name);
+      // The SelectCard shares its array with player.dealtProjectCards; the swap
+      // must update it in place so every reference stays consistent.
+      expect(player.dealtProjectCards.map((c) => c.name)).to.include(replacement.name);
+      expect(player.dealtProjectCards.map((c) => c.name)).to.not.include(target.name);
     });
   });
 
