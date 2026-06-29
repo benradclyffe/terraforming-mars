@@ -91,13 +91,22 @@
 // --- Bottom player bar ------------------------------------------------------
 
 .player-dashboard-bar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-  padding: 4px 8px;
+  flex: 0 0 auto;
+  overflow: hidden;
   background: rgba(0, 0, 0, 0.6);
   border-top: 1px solid #5a4a3a;
+}
+
+// Single non-wrapping row, sized to its natural content. PlayerDashboardBar
+// scales this to fit the bar width.
+.player-dashboard-bar-content {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 8px;
+  width: max-content;
+  transform-origin: top left;
 }
 
 .dashboard-icons {
