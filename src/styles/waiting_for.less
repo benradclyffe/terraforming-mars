@@ -99,3 +99,49 @@
     color: #fff;
   }
 }
+
+// Sandbox card replacement: a small icon on each offered card (keeps the card
+// grid intact) plus a single search panel shown when one is being replaced.
+.sandbox-replaceable {
+  position: relative;
+}
+
+.card-replace-icon {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 3;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-size: 15px;
+  line-height: 24px;
+  text-align: center;
+  color: #fff;
+  background: rgba(40, 80, 140, 0.92);
+  border: 1px solid #14304d;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.card-replace-icon:hover {
+  background: rgba(60, 110, 180, 1);
+}
+
+.card-replace-search {
+  clear: both;
+  margin: 8px 0;
+  padding: 8px 10px;
+  background: #25201c;
+  border: 1px solid #5a4a3a;
+  border-radius: 6px;
+}
+
+.card-replace-search-title {
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.card-replace-cancel {
+  margin-top: 6px;
+}

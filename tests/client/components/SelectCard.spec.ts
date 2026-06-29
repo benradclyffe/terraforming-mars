@@ -40,12 +40,12 @@ describe('SelectCard', () => {
 
   it('shows no replace controls unless the sandbox preference is on', () => {
     PreferencesManager.INSTANCE.set('sandbox_card_search', false);
-    expect(mountSelectCard().findAll('.card-replace-button').length).to.eq(0);
+    expect(mountSelectCard().findAll('.card-replace-icon').length).to.eq(0);
   });
 
-  it('shows a replace control per card when the sandbox preference is on in solo', () => {
+  it('shows a replace icon per card when the sandbox preference is on in solo', () => {
     PreferencesManager.INSTANCE.set('sandbox_card_search', true);
-    expect(mountSelectCard().findAll('.card-replace-button').length).to.eq(2);
+    expect(mountSelectCard().findAll('.card-replace-icon').length).to.eq(2);
   });
 
   it('hides the replace controls in multiplayer even when the sandbox preference is on', () => {
@@ -53,7 +53,7 @@ describe('SelectCard', () => {
     const p1 = fakePublicPlayerModel({color: 'red'});
     const p2 = fakePublicPlayerModel({color: 'blue'});
     const multiplayer = fakePlayerViewModel({thisPlayer: p1, players: [p1, p2]});
-    expect(mountSelectCard(multiplayer).findAll('.card-replace-button').length).to.eq(0);
+    expect(mountSelectCard(multiplayer).findAll('.card-replace-icon').length).to.eq(0);
   });
 
   it('posts a replace request when a replacement is chosen', async () => {
@@ -65,7 +65,7 @@ describe('SelectCard', () => {
     };
 
     const wrapper = mountSelectCard();
-    await wrapper.findAll('.card-replace-button')[0].trigger('click');
+    await wrapper.findAll('.card-replace-icon')[0].trigger('click');
     wrapper.findComponent(CardNameSearch).vm.$emit('select', CardName.SEARCH_FOR_LIFE);
     await wrapper.vm.$nextTick();
 
