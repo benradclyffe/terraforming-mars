@@ -93,6 +93,51 @@ describe('ActionMenu', () => {
     expect(savedData).to.deep.eq({type: 'or', index: 2, response: {type: 'option'}});
   });
 
+  it('auto-submits a terminal option requested via requestOptionIndex', async () => {
+    let savedData: InputResponse | undefined;
+    PreferencesManager.INSTANCE.set('learner_mode', false);
+    const component = mountActionMenu({
+      playerView: {},
+      playerinput: {
+        type: 'or',
+        title: 'Take your next action',
+        menu: true,
+        options: [
+          {type: 'option', title: 'Convert heat', buttonLabel: 'Convert heat'},
+        ],
+      },
+      onsave: (data: InputResponse) => {
+        savedData = data;
+      },
+    });
+    await component.setProps({requestOptionIndex: 0});
+    expect(savedData).to.deep.eq({type: 'or', index: 0, response: {type: 'option'}});
+    expect(component.find('.action-menu-modal').exists()).to.be.false;
+    expect(component.emitted('request-handled')).to.have.length(1);
+  });
+
+  it('opens the modal for a non-terminal requested option', async () => {
+    let savedData: InputResponse | undefined;
+    PreferencesManager.INSTANCE.set('learner_mode', false);
+    const component = mountActionMenu({
+      playerView: {},
+      playerinput: {
+        type: 'or',
+        title: 'Take your next action',
+        menu: true,
+        options: [
+          {type: 'space', title: 'Convert plants', buttonLabel: 'Convert plants', spaces: []},
+        ],
+      },
+      onsave: (data: InputResponse) => {
+        savedData = data;
+      },
+    });
+    await component.setProps({requestOptionIndex: 0});
+    expect(component.find('.action-menu-modal').exists()).to.be.true;
+    expect(savedData).to.be.undefined;
+  });
+
   it('closes the modal without submitting when cancelled', async () => {
     let savedData: InputResponse | undefined;
     PreferencesManager.INSTANCE.set('learner_mode', false);

@@ -22,7 +22,9 @@
     <ActionMenu v-if="waitingfor.type === 'or' && waitingfor.menu === true"
                           :playerView="asPlayerView"
                           :playerinput="waitingfor"
-                          :onsave="onsave" />
+                          :onsave="onsave"
+                          :requestOptionIndex="requestOptionIndex"
+                          @request-handled="$emit('request-handled')" />
     <PlayerInputFactory v-else
                           :players="playerView.players"
                           :playerView="playerView"
@@ -37,7 +39,7 @@
 <script lang="ts">
 /* global RequestInit */
 
-import {defineComponent} from 'vue';
+import {defineComponent, ComponentPublicInstance} from 'vue';
 import * as constants from '@/common/constants';
 import raw_settings from '@/genfiles/settings.json';
 import {vueRoot} from '@/client/components/vueRoot';
@@ -94,7 +96,14 @@ export default defineComponent({
       type: Object as () => PlayerInputModel | undefined,
       default: undefined,
     },
+    // Forwarded to ActionMenu so the dashboard can trigger a menu option (e.g. a
+    // convert action from a resource square).
+    requestOptionIndex: {
+      type: Number,
+      default: undefined,
+    },
   },
+  emits: ['request-handled'],
   data(): DataModel {
     return {
       playersWaitingFor: [],
@@ -140,7 +149,7 @@ export default defineComponent({
         {method: 'GET'});
     },
     fetchPlayerInput(url: string, options: RequestInit) {
-      const root = vueRoot(this);
+      const root = vueRoot(this as ComponentPublicInstance);
       if (root.isServerSideRequestInProgress) {
         console.warn('Server request in progress');
         return;
@@ -154,7 +163,7 @@ export default defineComponent({
             return;
           }
 
-          const showAlert = vueRoot(this).showAlert;
+          const showAlert = vueRoot(this as ComponentPublicInstance).showAlert;
           if (response.status === statusCode.badRequest) {
             const resp = await response.json() as AppErrorResponse;
             let cb = () => {};
@@ -177,7 +186,7 @@ export default defineComponent({
     },
     updatePlayerView(playerView: PlayerViewModel | undefined) {
       if (this.suspend === false) {
-        const root = vueRoot(this);
+        const root = vueRoot(this as ComponentPublicInstance);
         root.screen = 'empty';
         root.playerView = playerView;
         root.playerkey++;
@@ -192,7 +201,7 @@ export default defineComponent({
     },
     waitForUpdate() {
       const vueApp = this;
-      const root = vueRoot(this);
+      const root = vueRoot(this as ComponentPublicInstance);
       clearTimeout(ui_update_timeout_id);
       const askForUpdate = () => {
         const xhr = new XMLHttpRequest();

@@ -61,7 +61,15 @@ export default defineComponent({
       type: Boolean,
       default: true,
     },
+    // The original index of an option the dashboard wants to trigger (e.g. a
+    // convert action invoked from a resource square). A terminal option is
+    // submitted immediately; anything with further input opens its modal.
+    requestOptionIndex: {
+      type: Number,
+      default: undefined,
+    },
   },
+  emits: ['request-handled'],
   data(): DataModel {
     // Mirror OrOptions.vue: hide learner-mode-only cards while keeping a map back
     // to the original option index, so the index submitted to the server stays
@@ -86,6 +94,26 @@ export default defineComponent({
     // the template, so the index is always valid here.
     openedOption(): PlayerInputModel {
       return this.displayedOptions[this.openedIdx ?? 0];
+    },
+  },
+  watch: {
+    requestOptionIndex(index: number | undefined) {
+      if (index === undefined || index === null) {
+        return;
+      }
+      const displayedIdx = this.originalIndices.indexOf(index);
+      if (displayedIdx !== -1) {
+        const option = this.displayedOptions[displayedIdx];
+        if (option.type === 'option') {
+          // One-click: terminal options (e.g. convert heat) submit immediately.
+          this.onsave({type: 'or', index, response: {type: 'option'}});
+        } else {
+          // Anything needing further input (e.g. convert plants -> place a
+          // greenery) opens its modal.
+          this.openOption(displayedIdx);
+        }
+      }
+      this.$emit('request-handled');
     },
   },
   methods: {

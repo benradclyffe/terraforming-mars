@@ -26,7 +26,9 @@
       :count="player.plants"
       :production="player.plantProduction"
       :resourceProtection="player.protectedResources.plants"
-      :productionProtection="player.protectedProduction.plants"/>
+      :productionProtection="player.protectedProduction.plants"
+      :canConvert="convertResources[Resource.PLANTS] !== undefined"
+      @convert="$emit('convert', Resource.PLANTS)"/>
     <PlayerResource
       :type="Resource.ENERGY"
       :count="player.energy"
@@ -39,7 +41,9 @@
       :production="player.heatProduction"
       :value="canUseHeatAsMegaCredits ? 1 : 0"
       :resourceProtection="player.protectedResources.heat"
-      :productionProtection="player.protectedProduction.heat"/>
+      :productionProtection="player.protectedProduction.heat"
+      :canConvert="convertResources[Resource.HEAT] !== undefined"
+      @convert="$emit('convert', Resource.HEAT)"/>
   </div>
 </template>
 
@@ -57,7 +61,14 @@ export default defineComponent({
       type: Object as () => PublicPlayerModel,
       required: true,
     },
+    // Maps a resource to its convert-action index in the action menu. A resource
+    // present here gets a convert button on its square.
+    convertResources: {
+      type: Object as () => Partial<Record<Resource, number>>,
+      default: () => ({}),
+    },
   },
+  emits: ['convert'],
   computed: {
     Resource(): typeof Resource {
       return Resource;

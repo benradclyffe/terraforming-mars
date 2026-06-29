@@ -700,6 +700,24 @@ describe('Player', () => {
     });
   });
 
+  describe('convert action resource hints', () => {
+    it('marks the convert heat option with its resource', () => {
+      const [/* game */, player] = testGame(1);
+      player.stock.add(Resource.HEAT, 10);
+      const actions = cast(player.getActions(), OrOptions);
+      const models = actions.options.map((o) => o.toModel(player));
+      expect(models.some((m) => m.resourceSource === Resource.HEAT)).is.true;
+    });
+
+    it('marks the convert plants option with its resource', () => {
+      const [/* game */, player] = testGame(1);
+      player.stock.add(Resource.PLANTS, 10);
+      const actions = cast(player.getActions(), OrOptions);
+      const models = actions.options.map((o) => o.toModel(player));
+      expect(models.some((m) => m.resourceSource === Resource.PLANTS)).is.true;
+    });
+  });
+
   it('run research phase', () => {
     const [game, player] = testGame(1, {skipInitialCardSelection: true});
     game.generation = 2;

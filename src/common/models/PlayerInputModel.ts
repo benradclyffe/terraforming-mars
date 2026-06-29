@@ -6,6 +6,7 @@ import {AresData} from '../ares/AresData';
 import {Message} from '../logs/Message';
 import {PartyName} from '../turmoil/PartyName';
 import {SpaceId} from '../Types';
+import {Resource} from '../Resource';
 import {PaymentOptions} from '../inputs/Payment';
 import {GlobalEventName} from '../turmoil/globalEvents/GlobalEventName';
 import {Warning} from '../cards/Warning';
@@ -17,6 +18,10 @@ export type BaseInputModel = {
   warning?: string | Message;
   buttonLabel: string;
   optional?: boolean;
+  // When set, this input is a standard conversion of the given player resource
+  // (e.g. heat -> temperature, plants -> greenery). The client surfaces it as a
+  // button on that resource's square in the dashboard.
+  resourceSource?: Resource;
 }
 
 export type AndOptionsModel = BaseInputModel & {

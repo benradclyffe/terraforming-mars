@@ -13,6 +13,7 @@
           </div>
           <div v-if="showResourceValue()" class="resource_icon--megacredit-value" data-test="resource-value">{{ value }}</div>
       </div>
+      <button v-if="canConvert" class="resource-convert-button" :title="$t('Convert')" @click="$emit('convert')">⤴</button>
   </div>
 </template>
 
@@ -52,7 +53,12 @@ export default defineComponent({
       type: Number,
       default: 0,
     },
+    canConvert: {
+      type: Boolean,
+      default: false,
+    },
   },
+  emits: ['convert'],
   data() {
     return {
     };

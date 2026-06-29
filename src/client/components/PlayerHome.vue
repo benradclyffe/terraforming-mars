@@ -52,7 +52,9 @@
         </div>
 
         <div class="game-dashboard-actions">
-          <WaitingFor :playerView="playerView" :waitingfor="playerView.waitingFor"/>
+          <WaitingFor :playerView="playerView" :waitingfor="playerView.waitingFor"
+            :requestOptionIndex="requestOptionIndex"
+            @request-handled="requestOptionIndex = undefined"/>
         </div>
 
         <PlayerDashboardBar
@@ -61,7 +63,9 @@
           :handCount="cardsInHandCount"
           :playedCount="thisPlayer.tableau.length"
           :coloniesCount="game.colonies.length"
-          @toggle="setDrawer"/>
+          :convertResources="convertResources"
+          @toggle="setDrawer"
+          @convert="onConvert"/>
       </div>
 
       <Drawer v-if="openDrawer === 'log'" :open="true" side="right" title="Game log" @close="closeDrawer">
@@ -186,6 +190,7 @@ import {getPreferences, Preferences, PreferencesManager} from '@/client/utils/Pr
 import {GameModel} from '@/common/models/GameModel';
 import {PlayerViewModel, PublicPlayerModel} from '@/common/models/PlayerModel';
 import {Color} from '@/common/Color';
+import {Resource} from '@/common/Resource';
 import {CardType} from '@/common/cards/CardType';
 import {getCardsByType, isCardActivated} from '@/client/utils/CardUtils';
 import {sortActiveCards} from '@/client/utils/ActiveCardsSortingOrder';
@@ -205,6 +210,7 @@ type PlayerHomeModel = {
   selectedPlayerColor: Color | undefined;
   boardScale: number;
   boardResizeObserver: ResizeObserver | undefined;
+  requestOptionIndex: number | undefined;
 }
 
 type ToggleableCardType = 'HAND' | 'ACTIVE' | 'AUTOMATED' | 'EVENT';
@@ -233,6 +239,7 @@ export default defineComponent({
       selectedPlayerColor: undefined,
       boardScale: 1,
       boardResizeObserver: undefined,
+      requestOptionIndex: undefined,
     };
   },
   watch: {
@@ -310,6 +317,21 @@ export default defineComponent({
     selectedPlayerIndex(): number {
       return this.playerView.players.findIndex((p) => p.color === this.selectedPlayerColor);
     },
+    // Maps each resource that has a standard conversion available this turn to
+    // the index of its option within the action menu, so the dashboard can show
+    // a convert button on that resource's square.
+    convertResources(): Partial<Record<Resource, number>> {
+      const result: Partial<Record<Resource, number>> = {};
+      const waitingFor = this.playerView.waitingFor;
+      if (waitingFor?.type === 'or' && waitingFor.menu === true) {
+        waitingFor.options.forEach((option, index) => {
+          if (option.resourceSource !== undefined) {
+            result[option.resourceSource] = index;
+          }
+        });
+      }
+      return result;
+    },
   },
 
   components: {
@@ -352,6 +374,9 @@ export default defineComponent({
     openPlayerDrawer(color: Color): void {
       this.selectedPlayerColor = color;
       this.openDrawer = 'player';
+    },
+    onConvert(resource: Resource): void {
+      this.requestOptionIndex = this.convertResources[resource];
     },
     toggle(type: ToggleableCardType): void {
       this[typeToDataModel[type].key] = !this[typeToDataModel[type].key];

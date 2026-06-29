@@ -22,6 +22,7 @@ export class SelectSpace extends BasePlayerInput<Space> {
       buttonLabel: this.buttonLabel,
       type: 'space',
       spaces: this.spaces.map(toID),
+      resourceSource: this.resourceSource,
     };
   }
 

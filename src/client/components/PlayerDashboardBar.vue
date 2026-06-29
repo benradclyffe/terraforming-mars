@@ -6,7 +6,9 @@
       :actionLabel="''"
       :playerIndex="-1"
       :hideZeroTags="true"
-      :isTopBar="true" />
+      :isTopBar="true"
+      :convertResources="convertResources"
+      @convert="$emit('convert', $event)" />
 
     <div class="dashboard-icons">
       <button class="dashboard-icon dashboard-icon--corp" :title="$t('Corporation')" @click="toggle('corp')">
@@ -33,6 +35,7 @@
 import {defineComponent} from 'vue';
 import PlayerInfo from '@/client/components/overview/PlayerInfo.vue';
 import {PlayerViewModel} from '@/common/models/PlayerModel';
+import {Resource} from '@/common/Resource';
 
 // The fixed game bar below the board. Shows the current player's dashboard
 // (resources, production, tags) and icon buttons that toggle the slide-in
@@ -61,8 +64,12 @@ export default defineComponent({
       type: Number,
       required: true,
     },
+    convertResources: {
+      type: Object as () => Partial<Record<Resource, number>>,
+      default: () => ({}),
+    },
   },
-  emits: ['toggle'],
+  emits: ['toggle', 'convert'],
   methods: {
     toggle(drawer: DashboardDrawer) {
       this.$emit('toggle', drawer);

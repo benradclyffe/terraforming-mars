@@ -15,7 +15,7 @@
             <PlayerStatus :timer="player.timer" :showTimer="playerView.game.gameOptions.showTimers" :liveTimer="playerView.game.phase !== Phase.END" :firstForGen="firstForGen" v-trim-whitespace :actionLabel="actionLabel"/>
           </div>
         </div>
-          <PlayerResources :player="player" v-trim-whitespace />
+          <PlayerResources :player="player" :convertResources="convertResources" @convert="$emit('convert', $event)" v-trim-whitespace />
           <div class="player-played-cards">
             <div class="player-played-cards-top">
               <div class="played-cards-elements">
@@ -41,8 +41,9 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue';
+import {defineComponent, ComponentPublicInstance} from 'vue';
 import {ViewModel, PublicPlayerModel} from '@/common/models/PlayerModel';
+import {Resource} from '@/common/Resource';
 import PlayerResources from '@/client/components/overview/PlayerResources.vue';
 import PlayerTags from '@/client/components/overview/PlayerTags.vue';
 import PlayerAlliedParty from '@/client/components/overview/PlayerAlliedParty.vue';
@@ -88,7 +89,14 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    // Convert-action index by resource, drilled to the resource squares so they
+    // can show a convert button. Empty for opponents / non-dashboard usages.
+    convertResources: {
+      type: Object as () => Partial<Record<Resource, number>>,
+      default: () => ({}),
+    },
   },
+  emits: ['convert'],
   components: {
     AppButton,
     PlayerResources,
@@ -109,13 +117,13 @@ export default defineComponent({
   },
   methods: {
     isPinned(playerIndex: number): boolean {
-      return vueRoot(this).getVisibilityState('pinned_player_' + playerIndex);
+      return vueRoot(this as ComponentPublicInstance).getVisibilityState('pinned_player_' + playerIndex);
     },
     pin(playerIndex: number) {
-      return vueRoot(this).setVisibilityState('pinned_player_' + playerIndex, true);
+      return vueRoot(this as ComponentPublicInstance).setVisibilityState('pinned_player_' + playerIndex, true);
     },
     unpin(playerIndex: number) {
-      return vueRoot(this).setVisibilityState('pinned_player_' + playerIndex, false);
+      return vueRoot(this as ComponentPublicInstance).setVisibilityState('pinned_player_' + playerIndex, false);
     },
     pinPlayer() {
       let hiddenPlayersIndexes = [];

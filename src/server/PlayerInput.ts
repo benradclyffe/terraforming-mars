@@ -4,12 +4,18 @@ import {PlayerInputType} from '../common/input/PlayerInputType';
 import {InputResponse} from '../common/inputs/InputResponse';
 import {IPlayer} from './IPlayer';
 import {PlayerInputModel} from '../common/models/PlayerInputModel';
+import {Resource} from '../common/Resource';
 
 export interface PlayerInput {
     type: PlayerInputType;
     buttonLabel: string;
     title: string | Message;
     warning?: string | Message;
+
+    // When set, this input is a standard conversion of the given player
+    // resource (heat -> temperature, plants -> greenery), surfaced by the
+    // client as a button on that resource's dashboard square.
+    resourceSource?: Resource;
 
     // Contextual annotation identifying this PlayerInput.
     annotation: string | undefined;
@@ -52,6 +58,7 @@ export abstract class BasePlayerInput<T> implements PlayerInput {
   public eligibleForDefault: boolean | undefined = undefined;
   public annotation: string | undefined;
   public optional?: boolean;
+  public resourceSource?: Resource;
 
   public abstract toModel(player: IPlayer): PlayerInputModel;
   public abstract process(response: InputResponse, player: IPlayer): PlayerInput | undefined;
@@ -82,6 +89,11 @@ export abstract class BasePlayerInput<T> implements PlayerInput {
 
   public setButtonLabel(buttonLabel: string) : this {
     this.buttonLabel = buttonLabel;
+    return this;
+  }
+
+  public setResourceSource(resource: Resource) : this {
+    this.resourceSource = resource;
     return this;
   }
 

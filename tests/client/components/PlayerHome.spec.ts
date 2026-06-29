@@ -6,6 +6,7 @@ import Drawer from '@/client/components/common/Drawer.vue';
 import PlayerDashboardBar from '@/client/components/PlayerDashboardBar.vue';
 import OtherPlayersStrip from '@/client/components/OtherPlayersStrip.vue';
 import Sidebar from '@/client/components/Sidebar.vue';
+import WaitingFor from '@/client/components/WaitingFor.vue';
 import {fakePlayerViewModel, fakePublicPlayerModel} from './testHelpers';
 import {FakeLocalStorage} from './FakeLocalStorage';
 import {CardName} from '@/common/cards/CardName';
@@ -93,6 +94,22 @@ describe('PlayerHome', () => {
     wrapper.findComponent(PlayerDashboardBar).vm.$emit('toggle', 'corp');
     await wrapper.vm.$nextTick();
     expect(wrapper.findComponent(Drawer).props('title')).to.eq('Corporation');
+  });
+
+  it('forwards the convert option index to WaitingFor when the bar emits convert', async () => {
+    const view = inGameView();
+    view.waitingFor = {
+      type: 'or',
+      title: 'Take your next action',
+      menu: true,
+      options: [
+        {type: 'option', title: 'Convert heat', buttonLabel: 'Convert heat', resourceSource: 'heat'},
+      ],
+    } as any;
+    const wrapper = mountHome(view);
+    wrapper.findComponent(PlayerDashboardBar).vm.$emit('convert', 'heat');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.findComponent(WaitingFor).props('requestOptionIndex')).to.eq(0);
   });
 
   it('opens an opponent drawer when the strip emits select', async () => {
