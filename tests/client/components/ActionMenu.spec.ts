@@ -38,6 +38,26 @@ describe('ActionMenu', () => {
     expect(buttons.length).to.eq(2);
   });
 
+  it('does not render an action-row button for the play-card (projectCard) option', () => {
+    PreferencesManager.INSTANCE.set('learner_mode', false);
+    const component = mountActionMenu({
+      playerView: {},
+      playerinput: {
+        type: 'or',
+        title: 'Take your next action',
+        menu: true,
+        options: [
+          {type: 'projectCard', title: 'Play project card', buttonLabel: 'Play card', cards: []},
+          {type: 'option', title: 'Pass', buttonLabel: 'Pass'},
+        ],
+      },
+      onsave: () => {},
+    });
+    const buttons = component.findAllComponents({name: 'AppButton'});
+    expect(buttons.length).to.eq(1);
+    expect(buttons[0].text()).to.contain('Pass');
+  });
+
   it('opens a modal hosting the selected option when its button is clicked', async () => {
     PreferencesManager.INSTANCE.set('learner_mode', false);
     const component = mountActionMenu({

@@ -26,6 +26,8 @@ import {Phase} from '../src/common/Phase';
 import {testGame} from './TestGame';
 import {SelectCard} from '../src/server/inputs/SelectCard';
 import {SelectInitialCards} from '../src/server/inputs/SelectInitialCards';
+import {SelectProjectCardToPlay} from '../src/server/inputs/SelectProjectCardToPlay';
+import {cardsFromJSON} from '../src/server/createCard';
 import {AlliedBanks} from '../src/server/cards/prelude/AlliedBanks';
 import {Biofuels} from '../src/server/cards/prelude/Biofuels';
 import {CO2Reducers} from '../src/server/cards/pathfinders/CO2Reducers';
@@ -684,6 +686,23 @@ describe('Player', () => {
 
       expect(findOption(player, 'Convert 8 heat into temperature')).is.not.undefined;
       expect(findOption(player, 'Convert 6 heat into temperature (Turmoil Kelvinists)')).is.undefined;
+    });
+  });
+
+  describe('play-card option shows the full hand', () => {
+    it('lists every card in hand, disabling the unplayable ones', () => {
+      const [/* game */, player] = testGame(1);
+      player.megaCredits = 5;
+      const [powerPlant, research] = cardsFromJSON([CardName.POWER_PLANT, CardName.RESEARCH]);
+      player.cardsInHand.push(powerPlant, research);
+      const actions = cast(player.getActions(), OrOptions);
+      const playOption = actions.options.find((o) => o instanceof SelectProjectCardToPlay);
+      const model = cast(playOption, SelectProjectCardToPlay).toModel(player);
+      const names = model.cards.map((c) => c.name);
+      expect(names).to.include(CardName.POWER_PLANT);
+      expect(names).to.include(CardName.RESEARCH);
+      expect(model.cards.find((c) => c.name === CardName.POWER_PLANT)?.isDisabled).to.not.equal(true);
+      expect(model.cards.find((c) => c.name === CardName.RESEARCH)?.isDisabled).to.equal(true);
     });
   });
 

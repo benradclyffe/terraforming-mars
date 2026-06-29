@@ -1701,10 +1701,13 @@ export class Player implements IPlayer {
       action.options.push(ceoOpgAction);
     }
 
-    // Playable cards
+    // Playable cards. Offer the whole hand (so the client's cards view shows
+    // every card), but only enable the ones that can actually be played.
     const playableCards = this.getPlayableCards();
     if (playableCards.length !== 0) {
-      action.options.push(new SelectProjectCardToPlay(this, playableCards));
+      const hand = this.cardsInHand;
+      const enabled = hand.map((card) => playableCards.includes(card));
+      action.options.push(new SelectProjectCardToPlay(this, [...hand], {enabled}));
     }
 
     // Trade with colonies

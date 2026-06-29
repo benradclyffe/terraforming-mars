@@ -23,9 +23,18 @@ function inGameView() {
   return fakePlayerViewModel({thisPlayer, players: [thisPlayer, opponent]});
 }
 
-function mountHome(playerView = inGameView()) {
+// A stub that renders its default slot, so we can inspect a drawer's contents
+// without mounting the real Drawer (which has global side effects that leak
+// across tests).
+const SlotStub = {template: '<div><slot/></div>'};
+
+function mountHome(playerView = inGameView(), stubs?: Record<string, unknown>) {
   return shallowMount(PlayerHome, {
     ...globalConfig,
+    global: {
+      ...globalConfig.global,
+      stubs: {...(globalConfig.global as any)?.stubs, ...stubs},
+    },
     parentComponent: {
       methods: {
         getVisibilityState: () => true,
@@ -87,6 +96,32 @@ describe('PlayerHome', () => {
     wrapper.findComponent(Sidebar).vm.$emit('toggle-log');
     await wrapper.vm.$nextTick();
     expect(wrapper.findComponent(Drawer).props('title')).to.eq('Game log');
+  });
+
+  it('cards drawer hosts the play-card UI when the menu offers it', async () => {
+    const view = inGameView();
+    view.waitingFor = {
+      type: 'or', title: 'Take your next action', menu: true,
+      options: [
+        {type: 'projectCard', title: 'Play project card', buttonLabel: 'Play card', cards: []},
+        {type: 'option', title: 'Pass', buttonLabel: 'Pass'},
+      ],
+    } as any;
+    const wrapper = mountHome(view, {Drawer: SlotStub});
+    wrapper.findComponent(PlayerDashboardBar).vm.$emit('toggle', 'hand');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.findComponent({name: 'SelectProjectCardToPlay'}).exists()).to.be.true;
+    expect(wrapper.findComponent({name: 'SortableCards'}).exists()).to.be.false;
+  });
+
+  it('cards drawer shows the read-only hand when no play-card option is offered', async () => {
+    const view = inGameView();
+    view.cardsInHand = [{name: CardName.RESEARCH} as any];
+    const wrapper = mountHome(view, {Drawer: SlotStub});
+    wrapper.findComponent(PlayerDashboardBar).vm.$emit('toggle', 'hand');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.findComponent({name: 'SelectProjectCardToPlay'}).exists()).to.be.false;
+    expect(wrapper.findComponent({name: 'SortableCards'}).exists()).to.be.true;
   });
 
   it('opens the corporation drawer when the bar emits toggle corp', async () => {

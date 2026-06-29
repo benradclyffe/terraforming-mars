@@ -81,14 +81,22 @@
       </Drawer>
 
       <Drawer v-if="openDrawer === 'hand'" :open="true" side="bottom" title="Cards in hand" @close="closeDrawer">
-        <div class="player_home_block player_home_block--hand" v-if="playerView.draftedCards.length > 0">
-          <DynamicTitle title="Drafted cards" :color="thisPlayer.color" />
-          <div v-for="card in playerView.draftedCards" :key="card.name" class="cardbox">
-            <Card :card="card"/>
+        <SelectProjectCardToPlay v-if="playCardOption !== undefined"
+          :playerView="playerView"
+          :playerinput="playCardOption.option"
+          :onsave="onPlayCard"
+          :showsave="true"
+          :showtitle="false"/>
+        <template v-else>
+          <div class="player_home_block player_home_block--hand" v-if="playerView.draftedCards.length > 0">
+            <DynamicTitle title="Drafted cards" :color="thisPlayer.color" />
+            <div v-for="card in playerView.draftedCards" :key="card.name" class="cardbox">
+              <Card :card="card"/>
+            </div>
           </div>
-        </div>
-        <SortableCards v-if="cardsInHandCount > 0" :playerId="playerView.id" :cards="allCardsInHand" :playerView="playerView"/>
-        <div v-else v-i18n>No cards in hand</div>
+          <SortableCards v-if="cardsInHandCount > 0" :playerId="playerView.id" :cards="allCardsInHand" :playerView="playerView"/>
+          <div v-else v-i18n>No cards in hand</div>
+        </template>
       </Drawer>
 
       <Drawer v-if="openDrawer === 'played'" :open="true" side="bottom" title="Played cards" @close="closeDrawer">
@@ -174,7 +182,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, markRaw} from 'vue';
+import {defineComponent, markRaw, ComponentPublicInstance} from 'vue';
 
 import Card from '@/client/components/card/Card.vue';
 import WaitingFor from '@/client/components/WaitingFor.vue';
@@ -185,6 +193,9 @@ import GameBoardView from '@/client/components/GameBoardView.vue';
 import PlayerSetupView from '@/client/components/PlayerSetupView.vue';
 import DynamicTitle from '@/client/components/common/DynamicTitle.vue';
 import SortableCards from '@/client/components/SortableCards.vue';
+import SelectProjectCardToPlay from '@/client/components/SelectProjectCardToPlay.vue';
+import {submitPlayerInput} from '@/client/utils/PlayerInputSubmit';
+import {SelectProjectCardToPlayModel} from '@/common/models/PlayerInputModel';
 import TopBar from '@/client/components/TopBar.vue';
 import StackedCards from '@/client/components/StackedCards.vue';
 import PurgeWarning from '@/client/components/common/PurgeWarning.vue';
@@ -328,6 +339,20 @@ export default defineComponent({
     // Maps each resource that has a standard conversion available this turn to
     // the index of its option within the action menu, so the dashboard can show
     // a convert button on that resource's square.
+    // The play-a-card option, surfaced through the cards icon rather than as an
+    // action-row button. Returns the option (full hand + payment UI) plus its
+    // index within the action menu so the play can be submitted as an OrOptions
+    // response. Undefined when it isn't the player's action turn.
+    playCardOption(): {option: SelectProjectCardToPlayModel, index: number} | undefined {
+      const waitingFor = this.playerView.waitingFor;
+      if (waitingFor?.type === 'or' && waitingFor.menu === true) {
+        const index = waitingFor.options.findIndex((o) => o.type === 'projectCard');
+        if (index !== -1) {
+          return {option: waitingFor.options[index] as SelectProjectCardToPlayModel, index};
+        }
+      }
+      return undefined;
+    },
     convertResources(): Partial<Record<Resource, number>> {
       const result: Partial<Record<Resource, number>> = {};
       const waitingFor = this.playerView.waitingFor;
@@ -361,8 +386,23 @@ export default defineComponent({
     PlayerDashboardBar,
     OtherPlayersStrip,
     PlayerInfo,
+    SelectProjectCardToPlay,
   },
   methods: {
+    // Plays a card chosen from the cards drawer by submitting it as the
+    // selected option of the action menu (an OrOptions response).
+    onPlayCard(response: unknown) {
+      const playCardOption = this.playCardOption;
+      if (playCardOption === undefined) {
+        return;
+      }
+      submitPlayerInput(this as unknown as ComponentPublicInstance, this.playerView, {
+        type: 'or',
+        index: playCardOption.index,
+        response: response as any,
+      });
+      this.closeDrawer();
+    },
     isPlayerActing(playerView: PlayerViewModel) : boolean {
       return playerView.players.length > 1 && playerView.waitingFor !== undefined && !playerView.waitingFor.optional;
     },
