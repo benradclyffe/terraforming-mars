@@ -121,9 +121,48 @@
 
 .card-replace-search-title {
   color: #fff;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+}
+
+// The select-card component hides all <input>s (the selection checkboxes are
+// rendered as cards). Re-show the search box's text input.
+.card-replace-search .card-name-search-input {
+  display: inline-block;
+  width: 100%;
+  max-width: 340px;
+  padding: 5px 8px;
+  color: #111;
+  background: #fff;
+  border: 1px solid #5a4a3a;
+  border-radius: 4px;
+}
+
+.card-name-search-results {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid #5a4a3a;
+  border-radius: 4px;
+}
+
+.card-name-search-result {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 5px 8px;
+  color: #ddd;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.card-name-search-result:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
 }
 
 .card-replace-cancel {
-  margin-top: 6px;
+  margin-top: 8px;
 }
