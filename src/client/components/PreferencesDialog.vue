@@ -65,6 +65,15 @@
 
       <div class="preferences_panel_item">
         <label class="form-switch">
+          <input type="checkbox" @change="updatePreferences" v-model="prefs.sandbox_card_search" :disabled="!isSolo" data-test="sandbox_card_search">
+          <i class="form-icon"></i>
+          <span v-i18n>Sandbox: replace drawn cards (solo)</span>
+          <span class="tooltip tooltip-left" :data-tooltip="$t('When drawing cards, replace an offered card with any card from the deck by name. Solo games only.')">&#9432;</span>
+        </label>
+      </div>
+
+      <div class="preferences_panel_item">
+        <label class="form-switch">
           <input type="checkbox" @change="updatePreferences" v-model="prefs.symbol_overlay" data-test="symbol_overlay">
           <i class="form-icon"></i>
           <span v-i18n>Symbol Overlay</span>
@@ -123,6 +132,11 @@ export default defineComponent({
     preferencesManager: {
       type: Object as () => PreferencesManager,
       required: true,
+    },
+    // The sandbox card-search toggle is only changeable in solo games.
+    isSolo: {
+      type: Boolean,
+      default: false,
     },
   },
   components: {

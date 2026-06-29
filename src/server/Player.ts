@@ -22,6 +22,8 @@ import {PlayerInput} from './PlayerInput';
 import {Resource} from '../common/Resource';
 import {CardResource} from '../common/CardResource';
 import {SelectCard} from './inputs/SelectCard';
+import {InputError} from './inputs/InputError';
+import {Deck} from './cards/Deck';
 import {SellPatentsStandardProject} from './cards/base/standardProjects/SellPatentsStandardProject';
 import {SimpleDeferredAction} from './deferredActions/DeferredAction';
 import {Priority} from './deferredActions/Priority';
@@ -1551,6 +1553,66 @@ export class Player implements IPlayer {
   private incrementActionsTaken(): void {
     this.actionsTakenThisRound++;
     this.actionsTakenThisGame++;
+  }
+
+  // Sandbox tool: replace one of the cards currently offered for selection with
+  // a specific card drawn from the matching deck, found by name. The replaced
+  // card returns to the deck so deck size is unchanged. The client gates this
+  // behind a preference; the swap itself only ever pulls cards genuinely in the
+  // deck, so it cannot conjure cards from nothing.
+  public replaceDealtCard(targetName: CardName, replacementName: CardName): void {
+    const selectCard = this.findSelectCardOffering(this.waitingFor, targetName);
+    if (selectCard === undefined) {
+      throw new InputError(`No card selection is currently offering ${targetName}`);
+    }
+    const target = selectCard.cards.find((card) => card.name === targetName);
+    if (target === undefined) {
+      throw new InputError(`${targetName} is not currently offered`);
+    }
+    const deck = this.deckForCard(target);
+    const replacementIdx = deck.drawPile.findIndex((card) => card.name === replacementName);
+    if (replacementIdx === -1) {
+      throw new InputError(`${replacementName} is not in the deck (already drawn or in play)`);
+    }
+    const replacement = deck.drawPile.splice(replacementIdx, 1)[0];
+    selectCard.cards = selectCard.cards.map((card) => (card.name === targetName ? replacement : card));
+    deck.drawPile.push(target);
+  }
+
+  // Walks the waiting-for input tree (OrOptions / AndOptions / SelectInitialCards
+  // all expose `options`) for a SelectCard currently offering the named card.
+  private findSelectCardOffering(input: PlayerInput | undefined, cardName: CardName): SelectCard<ICard> | undefined {
+    if (input === undefined) {
+      return undefined;
+    }
+    if (input instanceof SelectCard) {
+      if (input.cards.some((card) => card.name === cardName)) {
+        return input as SelectCard<ICard>;
+      }
+    }
+    const options = (input as {options?: ReadonlyArray<PlayerInput>}).options;
+    if (Array.isArray(options)) {
+      for (const option of options) {
+        const found = this.findSelectCardOffering(option, cardName);
+        if (found !== undefined) {
+          return found;
+        }
+      }
+    }
+    return undefined;
+  }
+
+  private deckForCard(card: ICard): Deck<ICard> {
+    switch (card.type) {
+    case CardType.CORPORATION:
+      return this.game.corporationDeck as unknown as Deck<ICard>;
+    case CardType.PRELUDE:
+      return this.game.preludeDeck as unknown as Deck<ICard>;
+    case CardType.CEO:
+      return this.game.ceoDeck as unknown as Deck<ICard>;
+    default:
+      return this.game.projectDeck as unknown as Deck<ICard>;
+    }
   }
 
   public /* for testing */ getActions() {

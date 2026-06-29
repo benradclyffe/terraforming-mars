@@ -1,7 +1,8 @@
 <template>
     <div class="wf-component wf-component--select-card">
         <div v-if="showtitle === true" class="nofloat wf-component-title">{{ $t(playerinput.title) }}</div>
-        <label v-for="card in getOrderedCards()" :key="card.name" :class="getCardBoxClass(card)">
+        <div v-for="card in getOrderedCards()" :key="card.name" class="select-card-item">
+          <label :class="getCardBoxClass(card)">
             <template v-if="!card.isDisabled">
               <input v-if="selectOnlyOneCard" type="radio" v-model="cards" :value="card" >
               <input v-else type="checkbox" v-model="cards" :value="card" :disabled="playerinput.max !== undefined && Array.isArray(cards) && cards.length >= playerinput.max && cards.includes(card) === false" >
@@ -13,7 +14,12 @@
                 </div>
               </template>
             </Card>
-        </label>
+          </label>
+          <div v-if="sandbox" class="card-replace">
+            <button type="button" class="card-replace-button" @click.prevent="startReplace(card.name)" v-i18n>Replace</button>
+            <CardNameSearch v-if="replacingCard === card.name" :cards="eligibleCardNames" @select="onReplacementChosen" />
+          </div>
+        </div>
         <div v-if="hasCardWarning()" class="card-warning" v-i18n>{{ warning }}</div>
         <WarningsComponent :warnings="warnings"/>
         <div v-if="showsave === true" class="nofloat">
@@ -26,9 +32,10 @@
 
 <script lang="ts">
 
-import {defineComponent} from 'vue';
+import {defineComponent, ComponentPublicInstance} from 'vue';
 import AppButton from '@/client/components/common/AppButton.vue';
 import WarningsComponent from '@/client/components/WarningsComponent.vue';
+import CardNameSearch from '@/client/components/CardNameSearch.vue';
 import {Color} from '@/common/Color';
 import {Message} from '@/common/logs/Message';
 import {LogMessageDataType} from '@/common/logs/LogMessageDataType';
@@ -37,8 +44,26 @@ import {PlayerViewModel} from '@/common/models/PlayerModel';
 import Card from '@/client/components/card/Card.vue';
 import {CardModel} from '@/common/models/CardModel';
 import {CardName} from '@/common/cards/CardName';
+import {CardType} from '@/common/cards/CardType';
 import {SelectCardModel} from '@/common/models/PlayerInputModel';
 import {sortActiveCards} from '@/client/utils/ActiveCardsSortingOrder';
+import {getCard, getCards} from '@/client/cards/ClientCardManifest';
+import {getPreferences} from '@/client/utils/PreferencesManager';
+import {vueRoot} from '@/client/components/vueRoot';
+import {paths} from '@/common/app/paths';
+
+// Group a card type into the deck it is drawn from, so the sandbox search only
+// offers replacements valid for the current selection (e.g. a corporation slot
+// searches corporations).
+type DeckCategory = 'corp' | 'prelude' | 'ceo' | 'project';
+function deckCategory(type: CardType): DeckCategory {
+  switch (type) {
+  case CardType.CORPORATION: return 'corp';
+  case CardType.PRELUDE: return 'prelude';
+  case CardType.CEO: return 'ceo';
+  default: return 'project';
+  }
+}
 import {SelectCardResponse} from '@/common/inputs/InputResponse';
 import {Warning} from '@/common/cards/Warning';
 
@@ -53,6 +78,8 @@ type WidgetDataModel = {
   warning: string | Message | undefined;
   warnings: ReadonlyArray<Warning> | undefined;
   owners: Map<CardName, Owner>,
+  // Sandbox: the offered card whose replacement search is currently open.
+  replacingCard: CardName | undefined,
 }
 
 export default defineComponent({
@@ -85,12 +112,14 @@ export default defineComponent({
       warning: undefined,
       owners: new Map(),
       warnings: undefined,
+      replacingCard: undefined,
     };
   },
   components: {
     Card,
     WarningsComponent,
     AppButton,
+    CardNameSearch,
   },
   watch: {
     cards() {
@@ -160,6 +189,37 @@ export default defineComponent({
     saveData() {
       this.onsave({type: 'card', cards: this.getData()});
     },
+    startReplace(cardName: CardName) {
+      this.replacingCard = this.replacingCard === cardName ? undefined : cardName;
+    },
+    onReplacementChosen(replacementName: CardName) {
+      this.replaceCard(this.replacingCard, replacementName);
+    },
+    replaceCard(targetName: CardName | undefined, replacementName: CardName) {
+      if (targetName === undefined) {
+        return;
+      }
+      this.replacingCard = undefined;
+      fetch(paths.REPLACE_CARD + '?id=' + this.playerView.id, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          runId: this.playerView.runId,
+          targetCardName: targetName,
+          replacementCardName: replacementName,
+        }),
+      }).then(async (response) => {
+        const root = vueRoot(this as ComponentPublicInstance);
+        if (response.ok) {
+          root.updatePlayer();
+        } else {
+          const body = await response.json().catch(() => ({message: 'Unknown error'}));
+          root.showAlert('Unable to replace card', body.message);
+        }
+      }).catch((e) => {
+        console.error('replaceCard', e);
+      });
+    },
     getCardBoxClass(card: CardModel): string {
       if (this.playerinput.showOwner && this.getOwner(card) !== undefined) {
         return 'cardbox cardbox-with-owner-label';
@@ -205,6 +265,27 @@ export default defineComponent({
     },
   },
   computed: {
+    sandbox(): boolean {
+      return getPreferences().sandbox_card_search === true;
+    },
+    // The cards the sandbox search may offer: same deck category as the current
+    // selection, limited to the game's enabled expansions.
+    eligibleCardNames(): Array<CardName> {
+      const offered = this.playerinput.cards;
+      if (offered.length === 0) {
+        return [];
+      }
+      const firstType = getCard(offered[0].name)?.type;
+      if (firstType === undefined) {
+        return [];
+      }
+      const category = deckCategory(firstType);
+      const expansions = this.playerView.game.gameOptions.expansions as unknown as Record<string, boolean>;
+      return getCards((card) =>
+        deckCategory(card.type) === category &&
+        (card.module === 'base' || expansions[card.module] === true),
+      ).map((card) => card.name);
+    },
     selectOnlyOneCard() : boolean {
       return this.playerinput.max === 1 && this.playerinput.min === 1;
     },

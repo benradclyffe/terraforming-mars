@@ -31,6 +31,22 @@ describe('PreferencesDialog', () => {
     expect(preferencesManager.values().learner_mode).is.true;
   });
 
+  it('disables the sandbox card-search toggle outside solo games', () => {
+    const wrapper = mount(PreferencesDialog, {
+      ...globalConfig,
+      props: {preferencesManager, isSolo: false},
+    });
+    expect(getCheckbox(wrapper, 'sandbox_card_search').disabled).is.true;
+  });
+
+  it('enables the sandbox card-search toggle in solo games', () => {
+    const wrapper = mount(PreferencesDialog, {
+      ...globalConfig,
+      props: {preferencesManager, isSolo: true},
+    });
+    expect(getCheckbox(wrapper, 'sandbox_card_search').disabled).is.false;
+  });
+
   it('toggling sets the underlying preferences', async () => {
     const wrapper = mount(PreferencesDialog, {
       ...globalConfig,
