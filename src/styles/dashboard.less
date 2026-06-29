@@ -13,13 +13,26 @@
   overflow: hidden;
 }
 
+.game-dashboard-purge {
+  flex: 0 0 auto;
+  text-align: center;
+}
+
 .game-dashboard-board {
   flex: 1 1 auto;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+// Sizes to the board's natural dimensions (inline-block) so the fit-to-fill
+// scale transform measured in JS is correct. Transform doesn't affect the
+// measured offset box, so the scaling can't feed back on itself.
+.board-scaler {
+  display: inline-block;
+  transform-origin: center center;
 }
 
 .game-dashboard-left {

@@ -13,6 +13,8 @@
          cards / colonies tucked into slide-in drawers behind icons. -->
     <template v-else-if="thisPlayer.tableau.length > 0">
       <div class="game-dashboard">
+        <PurgeWarning class="game-dashboard-purge" :expectedPurgeTimeMs="game.expectedPurgeTimeMs"/>
+
         <OtherPlayersStrip
           v-if="playerView.players.length > 1"
           class="game-dashboard-left"
@@ -40,11 +42,13 @@
           @toggle-log="setDrawer('log')"/>
 
         <div class="game-dashboard-board">
-          <GameBoardView
-            :game="game"
-            :tileView="tileView"
-            :players="playerView.players"
-            @toggleTileView="cycleTileView()"/>
+          <div class="board-scaler" ref="boardScaler" :style="{transform: 'scale(' + boardScale + ')'}">
+            <GameBoardView
+              :game="game"
+              :tileView="tileView"
+              :players="playerView.players"
+              @toggleTileView="cycleTileView()"/>
+          </div>
         </div>
 
         <div class="game-dashboard-actions">
@@ -138,7 +142,6 @@
         <PlayerInfo :player="selectedPlayer" :playerView="playerView" :actionLabel="''" :playerIndex="selectedPlayerIndex"/>
       </Drawer>
 
-      <PurgeWarning :expectedPurgeTimeMs="game.expectedPurgeTimeMs"/>
       <KeyboardShortcuts v-show="keyboardShortcutOpened" @close="keyboardShortcutOpened = false"/>
     </template>
 
@@ -150,7 +153,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue';
+import {defineComponent, markRaw} from 'vue';
 
 import Card from '@/client/components/card/Card.vue';
 import WaitingFor from '@/client/components/WaitingFor.vue';
@@ -191,6 +194,8 @@ type PlayerHomeModel = {
   showEventCards: boolean;
   openDrawer: DrawerName | undefined;
   selectedPlayerColor: Color | undefined;
+  boardScale: number;
+  boardResizeObserver: ResizeObserver | undefined;
 }
 
 type ToggleableCardType = 'HAND' | 'ACTIVE' | 'AUTOMATED' | 'EVENT';
@@ -217,6 +222,8 @@ export default defineComponent({
       showEventCards: !preferences.hide_event_cards,
       openDrawer: undefined,
       selectedPlayerColor: undefined,
+      boardScale: 1,
+      boardResizeObserver: undefined,
     };
   },
   watch: {
@@ -367,6 +374,36 @@ export default defineComponent({
     isNotActive(cardModel: CardModel): boolean {
       return !getCardOrThrow(cardModel.name).hasAction;
     },
+    // Scale the board so it fills the space between the bottom bar and the top
+    // without being clipped, regardless of window size. offsetWidth/Height are
+    // unaffected by the transform, so measuring them here can't feed back.
+    updateBoardScale(): void {
+      const scaler = this.$refs.boardScaler as HTMLElement | undefined;
+      const container = scaler?.parentElement;
+      if (scaler === undefined || container === null || container === undefined) {
+        return;
+      }
+      const naturalWidth = scaler.offsetWidth;
+      const naturalHeight = scaler.offsetHeight;
+      if (naturalWidth === 0 || naturalHeight === 0) {
+        return;
+      }
+      const scale = Math.min(container.clientWidth / naturalWidth, container.clientHeight / naturalHeight);
+      this.boardScale = Math.max(0.5, Math.min(scale, 3));
+    },
+  },
+  mounted() {
+    this.$nextTick(() => this.updateBoardScale());
+    const scaler = this.$refs.boardScaler as HTMLElement | undefined;
+    const container = scaler?.parentElement;
+    if (container !== null && container !== undefined && typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(() => this.updateBoardScale());
+      observer.observe(container);
+      this.boardResizeObserver = markRaw(observer);
+    }
+  },
+  unmounted() {
+    this.boardResizeObserver?.disconnect();
   },
 });
 
