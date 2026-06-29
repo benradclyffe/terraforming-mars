@@ -38,22 +38,45 @@ describe('SelectCard', () => {
     expect(mountSelectCard().exists()).to.be.true;
   });
 
-  it('shows no replace controls unless the sandbox preference is on', () => {
-    PreferencesManager.INSTANCE.set('sandbox_card_search', false);
-    expect(mountSelectCard().findAll('.card-replace-icon').length).to.eq(0);
-  });
-
-  it('shows a replace icon per card when the sandbox preference is on in solo', () => {
+  it('does not change the card markup (no inserted controls) so selection is unaffected', () => {
     PreferencesManager.INSTANCE.set('sandbox_card_search', true);
-    expect(mountSelectCard().findAll('.card-replace-icon').length).to.eq(2);
+    const wrapper = mountSelectCard();
+    // The only interactive elements inside each card label are the selection input.
+    expect(wrapper.findAll('.card-replace-icon').length).to.eq(0);
+    expect(wrapper.findAll('.card-replace-button').length).to.eq(0);
   });
 
-  it('hides the replace controls in multiplayer even when the sandbox preference is on', () => {
+  it('shows a sandbox hint when the preference is on in solo', () => {
+    PreferencesManager.INSTANCE.set('sandbox_card_search', true);
+    expect(mountSelectCard().find('.card-replace-hint').exists()).to.be.true;
+  });
+
+  it('shows no sandbox hint unless the preference is on', () => {
+    PreferencesManager.INSTANCE.set('sandbox_card_search', false);
+    expect(mountSelectCard().find('.card-replace-hint').exists()).to.be.false;
+  });
+
+  it('shows no sandbox hint in multiplayer even when the preference is on', () => {
     PreferencesManager.INSTANCE.set('sandbox_card_search', true);
     const p1 = fakePublicPlayerModel({color: 'red'});
     const p2 = fakePublicPlayerModel({color: 'blue'});
     const multiplayer = fakePlayerViewModel({thisPlayer: p1, players: [p1, p2]});
-    expect(mountSelectCard(multiplayer).findAll('.card-replace-icon').length).to.eq(0);
+    expect(mountSelectCard(multiplayer).find('.card-replace-hint').exists()).to.be.false;
+  });
+
+  it('opens the search on right-click of a card when sandbox is on', async () => {
+    PreferencesManager.INSTANCE.set('sandbox_card_search', true);
+    const wrapper = mountSelectCard();
+    expect(wrapper.findComponent(CardNameSearch).exists()).to.be.false;
+    await wrapper.findAll('label.cardbox')[0].trigger('contextmenu');
+    expect(wrapper.findComponent(CardNameSearch).exists()).to.be.true;
+  });
+
+  it('does not open the search on right-click when sandbox is off', async () => {
+    PreferencesManager.INSTANCE.set('sandbox_card_search', false);
+    const wrapper = mountSelectCard();
+    await wrapper.findAll('label.cardbox')[0].trigger('contextmenu');
+    expect(wrapper.findComponent(CardNameSearch).exists()).to.be.false;
   });
 
   it('posts a replace request when a replacement is chosen', async () => {
@@ -65,7 +88,7 @@ describe('SelectCard', () => {
     };
 
     const wrapper = mountSelectCard();
-    await wrapper.findAll('.card-replace-icon')[0].trigger('click');
+    await wrapper.findAll('label.cardbox')[0].trigger('contextmenu');
     wrapper.findComponent(CardNameSearch).vm.$emit('select', CardName.SEARCH_FOR_LIFE);
     await wrapper.vm.$nextTick();
 

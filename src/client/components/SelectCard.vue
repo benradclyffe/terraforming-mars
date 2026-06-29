@@ -1,13 +1,13 @@
 <template>
     <div class="wf-component wf-component--select-card">
         <div v-if="showtitle === true" class="nofloat wf-component-title">{{ $t(playerinput.title) }}</div>
-        <label v-for="card in getOrderedCards()" :key="card.name" :class="[getCardBoxClass(card), {'sandbox-replaceable': sandbox}]"
+        <div v-if="sandbox" class="card-replace-hint" v-i18n>Sandbox: right-click a card to replace it</div>
+        <label v-for="card in getOrderedCards()" :key="card.name" :class="getCardBoxClass(card)"
           @contextmenu="onCardContextMenu($event, card.name)">
             <template v-if="!card.isDisabled">
               <input v-if="selectOnlyOneCard" type="radio" v-model="cards" :value="card" >
               <input v-else type="checkbox" v-model="cards" :value="card" :disabled="playerinput.max !== undefined && Array.isArray(cards) && cards.length >= playerinput.max && cards.includes(card) === false" >
             </template>
-            <button v-if="sandbox" type="button" class="card-replace-icon" :title="$t('Replace this card')" @click.prevent.stop="startReplace(card.name)">&#8645;</button>
             <Card :card="card" :actionUsed="isCardActivated(card)" :robotCard="robotCard(card)">
               <template v-if="playerinput.showOwner">
                 <div :class="'card-owner-label player_translucent_bg_color_'+ getOwner(card).color">
