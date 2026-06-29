@@ -1,7 +1,7 @@
 <template>
       <div :class="getClasses()">
         <div class="player-status-and-res">
-        <div class="player-status">
+        <div class="player-status" v-if="section !== 'body'">
           <div class="player-info-details">
             <div class="player-info-name" @click="togglePlayerDetails">{{ playerSymbol + player.name }}</div>
             <span @click="togglePlayerDetails" v-for="(corporationName, index) in getCorporationName()" :key="index" v-i18n>
@@ -15,6 +15,7 @@
             <PlayerStatus :timer="player.timer" :showTimer="playerView.game.gameOptions.showTimers" :liveTimer="playerView.game.phase !== Phase.END" :firstForGen="firstForGen" v-trim-whitespace :actionLabel="actionLabel"/>
           </div>
         </div>
+        <template v-if="section !== 'identity'">
           <PlayerResources :player="player" :convertResources="convertResources" @convert="$emit('convert', $event)" v-trim-whitespace />
           <div class="player-played-cards">
             <div class="player-played-cards-top">
@@ -34,9 +35,10 @@
             </div>
             <span class="tag-count-display">{{ availableBlueActionCount() }}</span>
           </div>
+        </template>
         </div>
-        <PlayerTags :player="player" :playerView="playerView" :hideZeroTags="hideZeroTags" :isTopBar="isTopBar" />
-        <PlayerAlliedParty :player="player"/>
+        <PlayerTags v-if="section !== 'identity'" :player="player" :playerView="playerView" :hideZeroTags="hideZeroTags" :isTopBar="isTopBar" />
+        <PlayerAlliedParty v-if="section !== 'identity'" :player="player"/>
       </div>
 </template>
 
@@ -88,6 +90,12 @@ export default defineComponent({
     isTopBar: {
       type: Boolean,
       default: false,
+    },
+    // Which part of the player panel to render: 'identity' = name/corp/timer
+    // only; 'body' = everything except identity; undefined = the full panel.
+    section: {
+      type: String as () => 'identity' | 'body' | undefined,
+      default: undefined,
     },
     // Convert-action index by resource, drilled to the resource squares so they
     // can show a convert button. Empty for opponents / non-dashboard usages.

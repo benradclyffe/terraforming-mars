@@ -15,6 +15,14 @@
       <div class="game-dashboard">
         <PurgeWarning class="game-dashboard-purge" :expectedPurgeTimeMs="game.expectedPurgeTimeMs"/>
 
+        <PlayerInfo
+          class="game-dashboard-identity"
+          :player="thisPlayer"
+          :playerView="playerView"
+          :actionLabel="''"
+          :playerIndex="-1"
+          section="identity"/>
+
         <OtherPlayersStrip
           v-if="playerView.players.length > 1"
           class="game-dashboard-left"

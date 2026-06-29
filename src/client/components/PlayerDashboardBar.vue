@@ -7,6 +7,7 @@
       :playerIndex="-1"
       :hideZeroTags="true"
       :isTopBar="true"
+      section="body"
       :convertResources="convertResources"
       @convert="$emit('convert', $event)" />
 

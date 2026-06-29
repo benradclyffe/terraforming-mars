@@ -18,6 +18,36 @@
   text-align: center;
 }
 
+// Slim top bar holding the current player's identity (name / corporation) and
+// timer, moved out of the bottom bar to free horizontal space for the dash.
+.game-dashboard-identity {
+  flex: 0 0 auto;
+
+  .player-info {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 2px 10px;
+  }
+
+  .player-status-and-res,
+  .player-status {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .player-info-details {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .player-info-name {
+    font-weight: bold;
+  }
+}
+
 .game-dashboard-board {
   flex: 1 1 auto;
   min-height: 0;
@@ -63,7 +93,8 @@
 .player-dashboard-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 8px 12px;
   padding: 4px 8px;
   background: rgba(0, 0, 0, 0.6);
   border-top: 1px solid #5a4a3a;
