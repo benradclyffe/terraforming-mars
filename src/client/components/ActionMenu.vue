@@ -8,7 +8,9 @@
         @click="openOption(idx)" />
     </div>
 
-    <div v-if="openedIdx !== undefined" class="action-menu-modal-overlay" @click.self="close">
+    <div v-if="openedIdx !== undefined" class="action-menu-modal-overlay"
+      :class="{'action-menu-modal-overlay--passthrough': boardSelection}"
+      @click.self="close">
       <div class="action-menu-modal">
         <button class="action-menu-modal-close" @click="close">×</button>
         <PlayerInputFactory ref="inputfactory"
@@ -94,6 +96,11 @@ export default defineComponent({
     // the template, so the index is always valid here.
     openedOption(): PlayerInputModel {
       return this.displayedOptions[this.openedIdx ?? 0];
+    },
+    // A board-space selection needs the player to click tiles on the board, so
+    // the modal must not sit over the board capturing those clicks.
+    boardSelection(): boolean {
+      return this.openedIdx !== undefined && this.openedOption.type === 'space';
     },
   },
   watch: {

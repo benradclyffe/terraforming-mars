@@ -138,6 +138,43 @@ describe('ActionMenu', () => {
     expect(savedData).to.be.undefined;
   });
 
+  it('makes the modal click-through when the option selects a board space', async () => {
+    PreferencesManager.INSTANCE.set('learner_mode', false);
+    const component = mountActionMenu({
+      playerView: {},
+      playerinput: {
+        type: 'or',
+        title: 'Take your next action',
+        menu: true,
+        options: [
+          {type: 'space', title: 'Convert plants', buttonLabel: 'Convert plants', spaces: []},
+        ],
+      },
+      onsave: () => {},
+    });
+    await component.setProps({requestOptionIndex: 0});
+    expect(component.find('.action-menu-modal-overlay--passthrough').exists()).to.be.true;
+  });
+
+  it('does not make the modal click-through for a normal option', async () => {
+    PreferencesManager.INSTANCE.set('learner_mode', false);
+    const component = mountActionMenu({
+      playerView: {},
+      playerinput: {
+        type: 'or',
+        title: 'Take your next action',
+        menu: true,
+        options: [
+          {type: 'card', title: 'Sell patents', buttonLabel: 'Sell', cards: [], min: 0, max: 5, showOnlyInLearnerMode: false, selectBlueCardAction: false, showOwner: false},
+        ],
+      },
+      onsave: () => {},
+    });
+    await component.findAllComponents({name: 'AppButton'})[0].trigger('click');
+    expect(component.find('.action-menu-modal').exists()).to.be.true;
+    expect(component.find('.action-menu-modal-overlay--passthrough').exists()).to.be.false;
+  });
+
   it('closes the modal without submitting when cancelled', async () => {
     let savedData: InputResponse | undefined;
     PreferencesManager.INSTANCE.set('learner_mode', false);

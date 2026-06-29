@@ -69,6 +69,19 @@
   padding: 16px;
 }
 
+// Board-space selection: the overlay must let clicks reach the board tiles, so
+// it's transparent and click-through, and the instruction panel docks to the
+// top edge to keep the board clear.
+.action-menu-modal-overlay--passthrough {
+  background: transparent;
+  pointer-events: none;
+  align-items: flex-start;
+
+  .action-menu-modal {
+    pointer-events: auto;
+  }
+}
+
 .action-menu-modal {
   position: relative;
   max-width: 95vw;
