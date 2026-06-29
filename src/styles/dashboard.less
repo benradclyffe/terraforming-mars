@@ -5,6 +5,9 @@
 .game-dashboard {
   position: fixed;
   inset: 0;
+  // Clear the fixed left sidebar (60px) so the board, action row, and bottom
+  // bar are not hidden behind it.
+  padding-left: 60px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
