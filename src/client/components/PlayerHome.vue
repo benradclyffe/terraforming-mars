@@ -125,6 +125,15 @@
         </div>
       </Drawer>
 
+      <Drawer v-if="openDrawer === 'corp'" :open="true" side="bottom" title="Corporation" @close="closeDrawer">
+        <div v-for="card in getCardsByType(thisPlayer.tableau, [CardType.CORPORATION])" :key="card.name" class="cardbox">
+          <Card :card="card" :actionUsed="isCardActivated(card, thisPlayer)" :cubeColor="thisPlayer.color"/>
+        </div>
+        <div v-for="card in getCardsByType(thisPlayer.tableau, [CardType.CEO])" :key="card.name" class="cardbox">
+          <Card :card="card" :actionUsed="isCardActivated(card, thisPlayer)" :cubeColor="thisPlayer.color"/>
+        </div>
+      </Drawer>
+
       <Drawer v-if="openDrawer === 'colonies'" :open="true" side="bottom" title="Colonies" @close="closeDrawer">
         <div class="colonies-fleets-cont">
           <div class="colonies-player-fleets" v-for="colonyPlayer in playerView.players" :key="colonyPlayer.color">
@@ -185,7 +194,7 @@ import {getCardOrThrow} from '../cards/ClientCardManifest';
 import {HomeMixin} from '@/client/mixins/HomeMixin';
 
 // The drawers that can be open over the dashboard. Only one is open at a time.
-type DrawerName = 'log' | 'hand' | 'played' | 'colonies' | 'player';
+type DrawerName = 'log' | 'hand' | 'played' | 'colonies' | 'player' | 'corp';
 
 type PlayerHomeModel = {
   showHand: boolean;

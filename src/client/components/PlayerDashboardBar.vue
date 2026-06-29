@@ -9,6 +9,10 @@
       :isTopBar="true" />
 
     <div class="dashboard-icons">
+      <button class="dashboard-icon dashboard-icon--corp" :title="$t('Corporation')" @click="toggle('corp')">
+        <i class="dashboard-icon-glyph dashboard-icon-glyph--corp"></i>
+        <span class="dashboard-label" v-i18n>Corp</span>
+      </button>
       <button class="dashboard-icon dashboard-icon--hand" :title="$t('Cards in hand')" @click="toggle('hand')">
         <i class="dashboard-icon-glyph dashboard-icon-glyph--hand"></i>
         <span class="dashboard-count">{{ handCount }}</span>
@@ -33,7 +37,7 @@ import {PlayerViewModel} from '@/common/models/PlayerModel';
 // The fixed game bar below the board. Shows the current player's dashboard
 // (resources, production, tags) and icon buttons that toggle the slide-in
 // drawers for cards in hand, played cards, and colonies.
-export type DashboardDrawer = 'hand' | 'played' | 'colonies';
+export type DashboardDrawer = 'hand' | 'played' | 'colonies' | 'corp';
 
 export default defineComponent({
   name: 'PlayerDashboardBar',

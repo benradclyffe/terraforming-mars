@@ -47,6 +47,12 @@ describe('PlayerDashboardBar', () => {
     expect(wrapper.emitted('toggle')).to.deep.eq([['played']]);
   });
 
+  it('emits toggle "corp" when the corporation icon is clicked', async () => {
+    const wrapper = mountBar();
+    await wrapper.find('.dashboard-icon--corp').trigger('click');
+    expect(wrapper.emitted('toggle')).to.deep.eq([['corp']]);
+  });
+
   it('hides the colonies icon when there are no colonies', () => {
     expect(mountBar({coloniesCount: 0}).find('.dashboard-icon--colonies').exists()).to.be.false;
   });

@@ -88,6 +88,13 @@ describe('PlayerHome', () => {
     expect(wrapper.findComponent(Drawer).props('title')).to.eq('Game log');
   });
 
+  it('opens the corporation drawer when the bar emits toggle corp', async () => {
+    const wrapper = mountHome();
+    wrapper.findComponent(PlayerDashboardBar).vm.$emit('toggle', 'corp');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.findComponent(Drawer).props('title')).to.eq('Corporation');
+  });
+
   it('opens an opponent drawer when the strip emits select', async () => {
     const wrapper = mountHome();
     wrapper.findComponent(OtherPlayersStrip).vm.$emit('select', 'red');
