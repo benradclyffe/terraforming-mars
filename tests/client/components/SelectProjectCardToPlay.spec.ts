@@ -12,18 +12,59 @@ import {Payment} from '@/common/inputs/Payment';
 import {CardModel} from '@/common/models/CardModel';
 import {PreferencesManager} from '@/client/utils/PreferencesManager';
 import {SelectProjectCardToPlayResponse} from '@/common/inputs/InputResponse';
+import CardNameSearch from '@/client/components/CardNameSearch.vue';
+import {fakePlayerViewModel} from './testHelpers';
 
 describe('SelectProjectCardToPlay', () => {
   let localStorage: FakeLocalStorage;
   let saveResponse: SelectProjectCardToPlayResponse;
+  let originalFetch: typeof fetch;
 
   beforeEach(() => {
     localStorage = new FakeLocalStorage();
     FakeLocalStorage.register(localStorage);
     PreferencesManager.INSTANCE.set('show_alerts', false);
+    originalFetch = (global as any).fetch;
   });
   afterEach(() => {
     FakeLocalStorage.deregister(localStorage);
+    (global as any).fetch = originalFetch;
+    PreferencesManager.INSTANCE.set('sandbox_card_search', false);
+  });
+
+  it('replaces a card in hand via right-click + search when sandbox is on', async () => {
+    PreferencesManager.INSTANCE.set('sandbox_card_search', true);
+    const calls: Array<{url: string, body: any}> = [];
+    (global as any).fetch = (url: string, opts: any) => {
+      calls.push({url, body: JSON.parse(opts.body)});
+      return new Promise(() => {});
+    };
+    const component = mount(SelectProjectCardToPlay, {
+      ...globalConfig,
+      global: {...globalConfig.global, components: {CardNameSearch}},
+      props: {
+        playerView: fakePlayerViewModel(),
+        playerinput: {
+          type: 'projectCard',
+          title: 'Play project card',
+          cards: [{name: CardName.ANTS, reserveUnits: Units.EMPTY}, {name: CardName.BIRDS, reserveUnits: Units.EMPTY}],
+          paymentOptions: {},
+          buttonLabel: 'Play card',
+        } as any,
+        onsave: () => {},
+        showsave: true,
+        showtitle: false,
+      },
+    });
+    expect(component.findComponent(CardNameSearch).exists()).to.be.false;
+    await component.findAll('.payments_cards')[0].trigger('contextmenu');
+    expect(component.findComponent(CardNameSearch).exists()).to.be.true;
+    component.findComponent(CardNameSearch).vm.$emit('select', CardName.CARTEL);
+    await component.vm.$nextTick();
+    expect(calls.length).to.eq(1);
+    expect(calls[0].url).to.contain('player/replace-card');
+    expect(calls[0].body.targetCardName).to.eq(CardName.ANTS);
+    expect(calls[0].body.replacementCardName).to.eq(CardName.CARTEL);
   });
 
   it('using sort order for cards', async () => {

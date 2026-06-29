@@ -1,7 +1,13 @@
 <template>
 <div class="payments_cont">
   <div v-if="showtitle === true">{{ $t(playerinput.title) }}</div>
-  <label v-for="availableCard in cards" class="payments_cards" :key="availableCard.name">
+  <div v-if="sandbox" class="card-replace-hint" v-i18n>Sandbox: right-click a card to replace it</div>
+  <div v-if="sandbox && replacingCard !== undefined" class="card-replace-search">
+    <div class="card-replace-search-title">{{ $t('Replace') }} {{ replacingCard }}</div>
+    <CardNameSearch :cards="eligibleCardNames" @select="onReplacementChosen" />
+    <button type="button" class="card-replace-cancel" @click="replacingCard = undefined" v-i18n>Cancel</button>
+  </div>
+  <label v-for="availableCard in cards" class="payments_cards" :key="availableCard.name" @contextmenu="onCardContextMenu($event, availableCard.name)">
     <input v-if="!availableCard.isDisabled" class="hidden" type="radio" v-model="cardName" :value="availableCard.name" >
     <Card class="cardbox" :card="availableCard" />
   </label>
@@ -36,9 +42,11 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue';
+import {defineComponent, ComponentPublicInstance} from 'vue';
 import {SpendableResource} from '@/common/inputs/Spendable';
 import Card from '@/client/components/card/Card.vue';
+import CardNameSearch from '@/client/components/CardNameSearch.vue';
+import {eligibleReplacementNames, isSandboxReplaceEnabled, sendReplaceCard} from '@/client/utils/SandboxCardReplace';
 import {getCardOrThrow} from '@/client/cards/ClientCardManifest';
 import {CardModel} from '@/common/models/CardModel';
 import {CardOrderStorage} from '@/client/utils/CardOrderStorage';
@@ -103,6 +111,13 @@ export default defineComponent({
     showPaymentSection(): boolean {
       return this.card !== undefined && this.card.isDisabled !== true;
     },
+    // Sandbox tool: right-click a card in hand to swap it for any deck card.
+    sandbox(): boolean {
+      return isSandboxReplaceEnabled(this.playerView);
+    },
+    eligibleCardNames(): Array<CardName> {
+      return eligibleReplacementNames(this.playerView, this.replacingCard);
+    },
   },
   watch: {
     // Vue runs watchers before re-rendering the component that owns them, so
@@ -137,10 +152,12 @@ export default defineComponent({
       cost: card?.calculatedCost ?? 0,
       tags: card !== undefined ? getCardOrThrow(card.name).tags : [],
       available: Units.of({}),
+      replacingCard: undefined as CardName | undefined,
     };
   },
   components: {
     Card,
+    CardNameSearch,
     PaymentForm,
     WarningsComponent,
   },
@@ -151,6 +168,20 @@ export default defineComponent({
     this.updateAvailableUnits();
   },
   methods: {
+    onCardContextMenu(event: Event, cardName: CardName) {
+      if (!this.sandbox) {
+        return;
+      }
+      event.preventDefault();
+      this.replacingCard = this.replacingCard === cardName ? undefined : cardName;
+    },
+    onReplacementChosen(replacementName: CardName) {
+      const targetName = this.replacingCard;
+      this.replacingCard = undefined;
+      if (targetName !== undefined) {
+        sendReplaceCard(this as unknown as ComponentPublicInstance, this.playerView, targetName, replacementName);
+      }
+    },
     getCard() {
       const card = this.cards.find((c) => c.name === this.cardName);
       if (card === undefined) {
