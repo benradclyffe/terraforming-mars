@@ -112,3 +112,70 @@
     color: #fff;
   }
 }
+
+// Sandbox card replacement: triggered by right-clicking a card (no markup is
+// added to the card itself, so card selection is unaffected). A single search
+// panel is shown when a card is being replaced.
+.card-replace-hint {
+  clear: both;
+  margin: 4px 0;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.card-replace-search {
+  clear: both;
+  margin: 8px 0;
+  padding: 8px 10px;
+  background: #25201c;
+  border: 1px solid #5a4a3a;
+  border-radius: 6px;
+}
+
+.card-replace-search-title {
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+// The select-card component hides all <input>s (the selection checkboxes are
+// rendered as cards). Re-show the search box's text input.
+.card-replace-search .card-name-search-input {
+  display: inline-block;
+  width: 100%;
+  max-width: 340px;
+  padding: 5px 8px;
+  color: #111;
+  background: #fff;
+  border: 1px solid #5a4a3a;
+  border-radius: 4px;
+}
+
+.card-name-search-results {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid #5a4a3a;
+  border-radius: 4px;
+}
+
+.card-name-search-result {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 5px 8px;
+  color: #ddd;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.card-name-search-result:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.card-replace-cancel {
+  margin-top: 8px;
+}

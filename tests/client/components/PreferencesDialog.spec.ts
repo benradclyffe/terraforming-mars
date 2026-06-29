@@ -31,6 +31,17 @@ describe('PreferencesDialog', () => {
     expect(preferencesManager.values().learner_mode).is.true;
   });
 
+  it('offers the sandbox card-search toggle', () => {
+    const wrapper = mount(PreferencesDialog, {
+      ...globalConfig,
+      props: {preferencesManager},
+    });
+    // The toggle is always available; the feature itself is restricted to solo
+    // games where the cards are drawn (see SelectCard).
+    expect(getDataTest(wrapper, 'sandbox_card_search').exists()).is.true;
+    expect(getCheckbox(wrapper, 'sandbox_card_search').disabled).is.false;
+  });
+
   it('toggling sets the underlying preferences', async () => {
     const wrapper = mount(PreferencesDialog, {
       ...globalConfig,

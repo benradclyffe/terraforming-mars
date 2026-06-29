@@ -20,6 +20,7 @@ export type Preferences = {
   symbol_overlay: boolean,
   animated_title: boolean,
   experimental_ui: boolean,
+  sandbox_card_search: boolean,
   lang: string,
 }
 
@@ -50,6 +51,7 @@ const defaults: Preferences = {
   animated_title: true,
 
   experimental_ui: false,
+  sandbox_card_search: false,
   debug_view: false,
 };
 

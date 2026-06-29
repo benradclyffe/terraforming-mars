@@ -25,6 +25,7 @@ import {SelectAmount} from '../src/server/inputs/SelectAmount';
 import {Phase} from '../src/common/Phase';
 import {testGame} from './TestGame';
 import {SelectCard} from '../src/server/inputs/SelectCard';
+import {SelectInitialCards} from '../src/server/inputs/SelectInitialCards';
 import {AlliedBanks} from '../src/server/cards/prelude/AlliedBanks';
 import {Biofuels} from '../src/server/cards/prelude/Biofuels';
 import {CO2Reducers} from '../src/server/cards/pathfinders/CO2Reducers';
@@ -715,6 +716,49 @@ describe('Player', () => {
       const actions = cast(player.getActions(), OrOptions);
       const models = actions.options.map((o) => o.toModel(player));
       expect(models.some((m) => m.resourceSource === Resource.PLANTS)).is.true;
+    });
+  });
+
+  describe('replaceDealtCard', () => {
+    it('swaps an offered card with one from the project deck', () => {
+      const [game, player] = testGame(1);
+      const deck = game.projectDeck;
+      const offered = [deck.drawOrThrow(game), deck.drawOrThrow(game)];
+      const replacement = deck.drawPile[0];
+      const select = new SelectCard('Select cards to buy', 'Buy', offered, {min: 0, max: 2});
+      player.setWaitingFor(select);
+
+      player.replaceDealtCard(offered[0].name, replacement.name);
+
+      expect(select.cards.map((c) => c.name)).to.include(replacement.name);
+      expect(select.cards.map((c) => c.name)).to.not.include(offered[0].name);
+      expect(deck.drawPile.map((c) => c.name)).to.include(offered[0].name);
+      expect(deck.drawPile.map((c) => c.name)).to.not.include(replacement.name);
+    });
+
+    it('throws when the replacement is not in the deck', () => {
+      const [game, player] = testGame(1);
+      const deck = game.projectDeck;
+      const offered = [deck.drawOrThrow(game)];
+      const select = new SelectCard('Select cards to buy', 'Buy', offered, {min: 0, max: 1});
+      player.setWaitingFor(select);
+
+      // offered[0] was drawn out of the deck, so it is not a valid replacement.
+      expect(() => player.replaceDealtCard(offered[0].name, offered[0].name)).to.throw(/not in the deck/i);
+    });
+
+    it('finds the project SelectCard nested in SelectInitialCards', () => {
+      const [game, player] = testGame(1, {skipInitialCardSelection: false});
+      const deck = game.projectDeck;
+      const initial = cast(player.getWaitingFor(), SelectInitialCards);
+      const projectSelect = cast(initial.inputs.project, SelectCard);
+      const target = projectSelect.cards[0];
+      const replacement = deck.drawPile[0];
+
+      player.replaceDealtCard(target.name, replacement.name);
+
+      expect(projectSelect.cards.map((c) => c.name)).to.include(replacement.name);
+      expect(projectSelect.cards.map((c) => c.name)).to.not.include(target.name);
     });
   });
 

@@ -349,6 +349,8 @@ export interface IPlayer {
   /** Return possible mid-game actions like play a card and fund an award, but not play prelude card. */
   getActions(): OrOptions;
   process(input: InputResponse): void;
+  /** Sandbox: swap a currently-offered card for a named card from the matching deck. */
+  replaceDealtCard(targetName: CardName, replacementName: CardName): void;
   getWaitingFor(): PlayerInput | undefined;
   setWaitingFor(input: PlayerInput, cb?: () => void): void;
   setWaitingForSafely(input: PlayerInput, cb?: () => void): void;
