@@ -65,7 +65,7 @@
 
       <div class="preferences_panel_item">
         <label class="form-switch">
-          <input type="checkbox" @change="updatePreferences" v-model="prefs.sandbox_card_search" :disabled="!solo" data-test="sandbox_card_search">
+          <input type="checkbox" @change="updatePreferences" v-model="prefs.sandbox_card_search" data-test="sandbox_card_search">
           <i class="form-icon"></i>
           <span v-i18n>Sandbox: replace drawn cards (solo)</span>
           <span class="tooltip tooltip-left" :data-tooltip="$t('When drawing cards, replace an offered card with any card from the deck by name. Solo games only.')">&#9432;</span>
@@ -116,10 +116,9 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, ComponentPublicInstance} from 'vue';
+import {defineComponent} from 'vue';
 
 import {getPreferences, PreferencesManager, Preference} from '@/client/utils/PreferencesManager';
-import {vueRoot} from '@/client/components/vueRoot';
 import BugReportDialog from '@/client/components/BugReportDialog.vue';
 
 
@@ -133,11 +132,6 @@ export default defineComponent({
     preferencesManager: {
       type: Object as () => PreferencesManager,
       required: true,
-    },
-    // The sandbox card-search toggle is only changeable in solo games.
-    isSolo: {
-      type: Boolean,
-      default: false,
     },
   },
   components: {
@@ -197,16 +191,6 @@ export default defineComponent({
     },
     getPreferences(): typeof getPreferences {
       return getPreferences;
-    },
-    // The sandbox toggle is only changeable in a solo game. Prefer the explicit
-    // prop (tests / callers that know), otherwise detect from the app root's
-    // current game so this works regardless of which screen opened the dialog.
-    solo(): boolean {
-      if (this.isSolo) {
-        return true;
-      }
-      const root = vueRoot(this as ComponentPublicInstance);
-      return root.playerView?.players?.length === 1;
     },
   },
 });

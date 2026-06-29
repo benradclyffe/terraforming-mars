@@ -265,8 +265,11 @@ export default defineComponent({
     },
   },
   computed: {
+    // The sandbox card-replacement tool is enabled by preference, but only
+    // offered in solo games. playerView is available directly here, so this is
+    // reliable regardless of how the preferences were set.
     sandbox(): boolean {
-      return getPreferences().sandbox_card_search === true;
+      return getPreferences().sandbox_card_search === true && this.playerView.players?.length === 1;
     },
     // The cards the sandbox search may offer: same deck category as the current
     // selection, limited to the game's enabled expansions.

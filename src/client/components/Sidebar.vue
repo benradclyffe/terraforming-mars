@@ -65,7 +65,7 @@
     </div>
   </a>
 
-  <PreferencesIcon :isSolo="playerNumber === 1"/>
+  <PreferencesIcon/>
 </div>
 </template>
 
