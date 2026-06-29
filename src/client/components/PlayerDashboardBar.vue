@@ -10,16 +10,19 @@
         :isTopBar="true"
         section="body"
         :convertResources="convertResources"
-        @convert="$emit('convert', $event)" />
+        @convert="$emit('convert', $event)">
+        <template #afterResources>
+          <button class="dashboard-hand" :title="$t('Cards in hand')" @click="toggle('hand')">
+            <span class="dashboard-hand-stack"></span>
+            <span class="dashboard-hand-count">{{ handCount }}</span>
+          </button>
+        </template>
+      </PlayerInfo>
 
       <div class="dashboard-icons">
         <button class="dashboard-icon dashboard-icon--corp" :title="$t('Corporation')" @click="toggle('corp')">
           <i class="dashboard-icon-glyph dashboard-icon-glyph--corp"></i>
           <span class="dashboard-label" v-i18n>Corp</span>
-        </button>
-        <button class="dashboard-icon dashboard-icon--hand" :title="$t('Cards in hand')" @click="toggle('hand')">
-          <i class="dashboard-icon-glyph dashboard-icon-glyph--hand"></i>
-          <span class="dashboard-count">{{ handCount }}</span>
         </button>
         <button class="dashboard-icon dashboard-icon--played" :title="$t('Played cards')" @click="toggle('played')">
           <i class="dashboard-icon-glyph dashboard-icon-glyph--played"></i>

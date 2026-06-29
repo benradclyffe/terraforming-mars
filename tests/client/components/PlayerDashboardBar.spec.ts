@@ -16,7 +16,7 @@ function mountBar(props: Record<string, unknown> = {}) {
     ...globalConfig,
     global: {
       ...globalConfig.global,
-      stubs: {PlayerInfo: {template: '<div class="stub-playerinfo"></div>'}},
+      stubs: {PlayerInfo: {template: '<div class="stub-playerinfo"><slot name="afterResources"/></div>'}},
     },
     props: {playerView, handCount: 3, playedCount: 5, coloniesCount: 0, ...props},
   });
@@ -27,17 +27,17 @@ describe('PlayerDashboardBar', () => {
     expect(mountBar().find('.stub-playerinfo').exists()).to.be.true;
   });
 
-  it('shows the cards-in-hand count on its icon', () => {
-    expect(mountBar().find('.dashboard-icon--hand .dashboard-count').text()).to.eq('3');
+  it('shows the cards-in-hand count on the big card stack', () => {
+    expect(mountBar().find('.dashboard-hand .dashboard-hand-count').text()).to.eq('3');
   });
 
   it('shows the played-cards count on its icon', () => {
     expect(mountBar().find('.dashboard-icon--played .dashboard-count').text()).to.eq('5');
   });
 
-  it('emits toggle "hand" when the hand icon is clicked', async () => {
+  it('emits toggle "hand" when the card stack is clicked', async () => {
     const wrapper = mountBar();
-    await wrapper.find('.dashboard-icon--hand').trigger('click');
+    await wrapper.find('.dashboard-hand').trigger('click');
     expect(wrapper.emitted('toggle')).to.deep.eq([['hand']]);
   });
 

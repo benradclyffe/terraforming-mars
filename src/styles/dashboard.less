@@ -157,6 +157,76 @@
   content: '🛰';
 }
 
+// --- Big centered "cards in hand" stack -------------------------------------
+// The prominent card-stack button that sits between the resource grid and the
+// played-card stats, with the hand count overlaid on it (cf. the official
+// client's centre-of-bar card stack).
+
+.dashboard-hand {
+  position: relative;
+  flex: 0 0 auto;
+  width: 56px;
+  height: 76px;
+  margin: 0 14px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+// The fanned/stacked cards behind the count: the element itself is the front
+// card, two ::before/::after layers are the cards peeking out behind it.
+.dashboard-hand-stack,
+.dashboard-hand-stack::before,
+.dashboard-hand-stack::after {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  width: 40px;
+  height: 60px;
+  border-radius: 5px;
+  background: linear-gradient(160deg, #3a4a5a, #1c2630);
+  border: 1px solid #b9935a;
+  box-sizing: border-box;
+}
+
+.dashboard-hand-stack {
+  z-index: 2;
+}
+
+.dashboard-hand-stack::before {
+  content: '';
+  transform: translate(-5px, 4px) rotate(-7deg);
+  z-index: -1;
+  opacity: 0.8;
+}
+
+.dashboard-hand-stack::after {
+  content: '';
+  transform: translate(5px, 4px) rotate(7deg);
+  z-index: -2;
+  opacity: 0.6;
+}
+
+.dashboard-hand-count {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  font-size: 26px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 1px 3px #000, 0 0 6px #000;
+  pointer-events: none;
+}
+
+.dashboard-hand:hover .dashboard-hand-stack {
+  border-color: #f0c987;
+  background: linear-gradient(160deg, #46596c, #232f3b);
+}
+
 // --- Resource convert button ------------------------------------------------
 
 .resource_item {

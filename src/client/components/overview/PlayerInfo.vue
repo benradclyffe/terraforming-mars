@@ -17,6 +17,7 @@
         </div>
         <template v-if="section !== 'identity'">
           <PlayerResources :player="player" :convertResources="convertResources" @convert="$emit('convert', $event)" v-trim-whitespace />
+          <slot name="afterResources"></slot>
           <div class="player-played-cards">
             <div class="player-played-cards-top">
               <div class="played-cards-elements">
