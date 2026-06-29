@@ -79,7 +79,7 @@
             <Card :card="card"/>
           </div>
         </div>
-        <SortableCards v-if="cardsInHandCount > 0" :playerId="playerView.id" :cards="allCardsInHand"/>
+        <SortableCards v-if="cardsInHandCount > 0" :playerId="playerView.id" :cards="allCardsInHand" :playerView="playerView"/>
         <div v-else v-i18n>No cards in hand</div>
       </Drawer>
 

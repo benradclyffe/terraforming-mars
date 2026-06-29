@@ -747,6 +747,21 @@ describe('Player', () => {
       expect(() => player.replaceDealtCard(offered[0].name, offered[0].name)).to.throw(/not in the deck/i);
     });
 
+    it('replaces a card already in hand when no card selection is active', () => {
+      const [game, player] = testGame(1);
+      const deck = game.projectDeck;
+      const inHand = deck.drawOrThrow(game);
+      player.cardsInHand.push(inHand);
+      const replacement = deck.drawPile[0];
+
+      player.replaceDealtCard(inHand.name, replacement.name);
+
+      expect(player.cardsInHand.map((c) => c.name)).to.include(replacement.name);
+      expect(player.cardsInHand.map((c) => c.name)).to.not.include(inHand.name);
+      expect(deck.drawPile.map((c) => c.name)).to.include(inHand.name);
+      expect(deck.drawPile.map((c) => c.name)).to.not.include(replacement.name);
+    });
+
     it('finds the project SelectCard nested in SelectInitialCards', () => {
       const [game, player] = testGame(1, {skipInitialCardSelection: false});
       const deck = game.projectDeck;

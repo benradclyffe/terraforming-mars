@@ -5,10 +5,16 @@
       <input type="checkbox" v-model="showReorder" > Reorder Cards
     </label>
   </div>
+  <div v-if="sandbox" class="card-replace-hint" v-i18n>Sandbox: right-click a card to replace it</div>
+  <div v-if="sandbox && replacingCard !== undefined" class="card-replace-search">
+    <div class="card-replace-search-title">{{ $t('Replace') }} {{ replacingCard }}</div>
+    <CardNameSearch :cards="eligibleCardNames" @select="onReplacementChosen" />
+    <button type="button" class="card-replace-cancel" @click="replacingCard = undefined" v-i18n>Cancel</button>
+  </div>
   <div class="sortable-cards">
     <div ref="draggers" :class="{ 'dragging': Boolean(dragCard) }" v-for="(card, index) in getSortedCards()" :key="card.name" draggable="true" @dragend="onDragEnd()" @dragstart="onDragStart(card.name)">
       <div v-if="dragCard" ref="droppers" class="drop-target" @dragover="onDragOver(card.name)"></div>
-      <div ref="cardbox" class="cardbox" @click="clickMethod">
+      <div ref="cardbox" class="cardbox" @click="clickMethod" @contextmenu="onCardContextMenu($event, card.name)">
         <Card :card="card"/>
         <div v-if="showReorder" class="reorder-banners-container">
           <div class="reorder-banners-left" v-if="index > 0"></div>
@@ -22,12 +28,15 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue';
+import {defineComponent, ComponentPublicInstance} from 'vue';
 import Card from '@/client/components/card/Card.vue';
+import CardNameSearch from '@/client/components/CardNameSearch.vue';
 import {CardName} from '@/common/cards/CardName';
 import {CardModel} from '@/common/models/CardModel';
+import {PlayerViewModel} from '@/common/models/PlayerModel';
 import {CardOrderStorage} from '@/client/utils/CardOrderStorage';
 import {getPreferences} from '@/client/utils/PreferencesManager';
+import {eligibleReplacementNames, isSandboxReplaceEnabled, sendReplaceCard} from '@/client/utils/SandboxCardReplace';
 
 type DataModel = {
   /** When true use the point-and-click reorder UI */
@@ -36,12 +45,15 @@ type DataModel = {
   cardOrder: {[x: string]: number};
   /** When defined, it is the name of the card being dragged. */
   dragCard: CardName | undefined;
+  /** Sandbox: the in-hand card whose replacement search is open. */
+  replacingCard: CardName | undefined;
 };
 
 export default defineComponent({
   name: 'SortableCards',
   components: {
     Card,
+    CardNameSearch,
   },
   props: {
     cards: {
@@ -51,6 +63,12 @@ export default defineComponent({
     playerId: {
       type: String,
       required: true,
+    },
+    // Provided for the cards-in-hand view so the sandbox replace tool can run.
+    playerView: {
+      type: Object as () => PlayerViewModel,
+      required: false,
+      default: undefined,
     },
   },
   data(): DataModel {
@@ -74,9 +92,32 @@ export default defineComponent({
       showReorder: false,
       cardOrder: cardOrder,
       dragCard: undefined,
+      replacingCard: undefined,
     };
   },
+  computed: {
+    sandbox(): boolean {
+      return this.playerView !== undefined && isSandboxReplaceEnabled(this.playerView);
+    },
+    eligibleCardNames(): Array<CardName> {
+      return this.playerView === undefined ? [] : eligibleReplacementNames(this.playerView, this.replacingCard);
+    },
+  },
   methods: {
+    onCardContextMenu(event: Event, cardName: CardName) {
+      if (!this.sandbox) {
+        return;
+      }
+      event.preventDefault();
+      this.replacingCard = this.replacingCard === cardName ? undefined : cardName;
+    },
+    onReplacementChosen(replacementName: CardName) {
+      const targetName = this.replacingCard;
+      this.replacingCard = undefined;
+      if (targetName !== undefined && this.playerView !== undefined) {
+        sendReplaceCard(this as ComponentPublicInstance, this.playerView, targetName, replacementName);
+      }
+    },
     getSortedCards() {
       return CardOrderStorage.getOrdered(
         this.cardOrder,

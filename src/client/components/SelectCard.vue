@@ -45,26 +45,9 @@ import {PlayerViewModel} from '@/common/models/PlayerModel';
 import Card from '@/client/components/card/Card.vue';
 import {CardModel} from '@/common/models/CardModel';
 import {CardName} from '@/common/cards/CardName';
-import {CardType} from '@/common/cards/CardType';
 import {SelectCardModel} from '@/common/models/PlayerInputModel';
 import {sortActiveCards} from '@/client/utils/ActiveCardsSortingOrder';
-import {getCard, getCards} from '@/client/cards/ClientCardManifest';
-import {getPreferences} from '@/client/utils/PreferencesManager';
-import {vueRoot} from '@/client/components/vueRoot';
-import {paths} from '@/common/app/paths';
-
-// Group a card type into the deck it is drawn from, so the sandbox search only
-// offers replacements valid for the current selection (e.g. a corporation slot
-// searches corporations).
-type DeckCategory = 'corp' | 'prelude' | 'ceo' | 'project';
-function deckCategory(type: CardType): DeckCategory {
-  switch (type) {
-  case CardType.CORPORATION: return 'corp';
-  case CardType.PRELUDE: return 'prelude';
-  case CardType.CEO: return 'ceo';
-  default: return 'project';
-  }
-}
+import {eligibleReplacementNames, isSandboxReplaceEnabled, sendReplaceCard} from '@/client/utils/SandboxCardReplace';
 import {SelectCardResponse} from '@/common/inputs/InputResponse';
 import {Warning} from '@/common/cards/Warning';
 
@@ -201,32 +184,11 @@ export default defineComponent({
       this.startReplace(cardName);
     },
     onReplacementChosen(replacementName: CardName) {
-      this.replaceCard(this.replacingCard, replacementName);
-    },
-    replaceCard(targetName: CardName | undefined, replacementName: CardName) {
-      if (targetName === undefined) {
-        return;
-      }
+      const targetName = this.replacingCard;
       this.replacingCard = undefined;
-      fetch(paths.REPLACE_CARD + '?id=' + this.playerView.id, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          runId: this.playerView.runId,
-          targetCardName: targetName,
-          replacementCardName: replacementName,
-        }),
-      }).then(async (response) => {
-        const root = vueRoot(this as ComponentPublicInstance);
-        if (response.ok) {
-          root.updatePlayer();
-        } else {
-          const body = await response.json().catch(() => ({message: 'Unknown error'}));
-          root.showAlert('Unable to replace card', body.message);
-        }
-      }).catch((e) => {
-        console.error('replaceCard', e);
-      });
+      if (targetName !== undefined) {
+        sendReplaceCard(this as ComponentPublicInstance, this.playerView, targetName, replacementName);
+      }
     },
     getCardBoxClass(card: CardModel): string {
       if (this.playerinput.showOwner && this.getOwner(card) !== undefined) {
@@ -273,29 +235,12 @@ export default defineComponent({
     },
   },
   computed: {
-    // The sandbox card-replacement tool is enabled by preference, but only
-    // offered in solo games. playerView is available directly here, so this is
-    // reliable regardless of how the preferences were set.
     sandbox(): boolean {
-      return getPreferences().sandbox_card_search === true && this.playerView.players?.length === 1;
+      return isSandboxReplaceEnabled(this.playerView);
     },
-    // The cards the sandbox search may offer: same deck category as the current
-    // selection, limited to the game's enabled expansions.
+    // The cards the sandbox search may offer for the card being replaced.
     eligibleCardNames(): Array<CardName> {
-      const offered = this.playerinput.cards;
-      if (offered.length === 0) {
-        return [];
-      }
-      const firstType = getCard(offered[0].name)?.type;
-      if (firstType === undefined) {
-        return [];
-      }
-      const category = deckCategory(firstType);
-      const expansions = this.playerView.game.gameOptions.expansions as unknown as Record<string, boolean>;
-      return getCards((card) =>
-        deckCategory(card.type) === category &&
-        (card.module === 'base' || expansions[card.module] === true),
-      ).map((card) => card.name);
+      return eligibleReplacementNames(this.playerView, this.replacingCard ?? this.playerinput.cards[0]?.name);
     },
     selectOnlyOneCard() : boolean {
       return this.playerinput.max === 1 && this.playerinput.min === 1;

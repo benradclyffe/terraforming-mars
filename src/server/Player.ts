@@ -1561,22 +1561,41 @@ export class Player implements IPlayer {
   // behind a preference; the swap itself only ever pulls cards genuinely in the
   // deck, so it cannot conjure cards from nothing.
   public replaceDealtCard(targetName: CardName, replacementName: CardName): void {
+    // Case 1: the card is already in hand. Checked first because while it's the
+    // player's turn the action menu also offers hand cards (Play a card), and we
+    // want a hand replacement to actually change the hand.
+    const handIdx = this.cardsInHand.findIndex((card) => card.name === targetName);
+    if (handIdx !== -1) {
+      const target = this.cardsInHand[handIdx];
+      const replacement = this.takeReplacementFromDeck(target, replacementName);
+      this.cardsInHand[handIdx] = replacement as IProjectCard;
+      this.deckForCard(target).drawPile.push(target);
+      return;
+    }
+
+    // Case 2: the card is one currently offered for selection (e.g. the initial
+    // cards / research buy screen, where it isn't in hand yet).
     const selectCard = this.findSelectCardOffering(this.waitingFor, targetName);
-    if (selectCard === undefined) {
-      throw new InputError(`No card selection is currently offering ${targetName}`);
+    if (selectCard !== undefined) {
+      const target = selectCard.cards.find((card) => card.name === targetName);
+      if (target !== undefined) {
+        const replacement = this.takeReplacementFromDeck(target, replacementName);
+        selectCard.cards = selectCard.cards.map((card) => (card.name === targetName ? replacement : card));
+        this.deckForCard(target).drawPile.push(target);
+        return;
+      }
     }
-    const target = selectCard.cards.find((card) => card.name === targetName);
-    if (target === undefined) {
-      throw new InputError(`${targetName} is not currently offered`);
-    }
+
+    throw new InputError(`${targetName} is not currently offered or in hand`);
+  }
+
+  private takeReplacementFromDeck(target: ICard, replacementName: CardName): ICard {
     const deck = this.deckForCard(target);
     const replacementIdx = deck.drawPile.findIndex((card) => card.name === replacementName);
     if (replacementIdx === -1) {
       throw new InputError(`${replacementName} is not in the deck (already drawn or in play)`);
     }
-    const replacement = deck.drawPile.splice(replacementIdx, 1)[0];
-    selectCard.cards = selectCard.cards.map((card) => (card.name === targetName ? replacement : card));
-    deck.drawPile.push(target);
+    return deck.drawPile.splice(replacementIdx, 1)[0];
   }
 
   // Walks the waiting-for input tree (OrOptions / AndOptions / SelectInitialCards
