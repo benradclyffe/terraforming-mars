@@ -809,6 +809,27 @@ describe('Player', () => {
       expect(deck.drawPile.map((c) => c.name)).to.not.include(replacement.name);
     });
 
+    it('refreshes the play-card disabled flag for the swapped-in card', () => {
+      // The play-card offering carries a parallel `enabled` array. After a swap
+      // the new card must not inherit the replaced card's disabled flag.
+      const [game, player] = testGame(1);
+      player.megaCredits = 100;
+      const deck = game.projectDeck;
+      const inHand = deck.drawOrThrow(game);
+      player.cardsInHand.push(inHand);
+      const [replacement] = cardsFromJSON([CardName.IMPORTED_GHG]);
+      deck.drawPile.push(replacement);
+      // Offer the hand with the in-hand card marked disabled.
+      const select = new SelectProjectCardToPlay(player, [...player.cardsInHand], {enabled: [false]});
+      player.setWaitingFor(select);
+
+      player.replaceDealtCard(inHand.name, CardName.IMPORTED_GHG);
+
+      const model = select.toModel(player);
+      const card = model.cards.find((c) => c.name === CardName.IMPORTED_GHG);
+      expect(card?.isDisabled).to.not.equal(true);
+    });
+
     it('can pull a replacement from the discard pile, not just the draw pile', () => {
       const [game, player] = testGame(1);
       const deck = game.projectDeck;

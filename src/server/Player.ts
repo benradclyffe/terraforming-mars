@@ -1575,7 +1575,7 @@ export class Player implements IPlayer {
 
     const target = handIdx !== -1 ?
       this.cardsInHand[handIdx] :
-      (selectCard as {cards: Array<ICard>}).cards.find((card) => card.name === targetName) as ICard;
+      (selectCard as unknown as {cards: Array<ICard>}).cards.find((card) => card.name === targetName) as ICard;
     const replacement = this.takeReplacementFromDeck(target, replacementName);
 
     if (handIdx !== -1) {
@@ -1585,10 +1585,18 @@ export class Player implements IPlayer {
       // Mutate the offering's array in place: it is often the same object as
       // player.dealtProjectCards or a drawn-cards closure, so reassigning it
       // would leave those other references (and the displayed list) stale.
-      const cards = selectCard.cards as Array<ICard>;
+      const cards = (selectCard as unknown as {cards: Array<ICard>}).cards;
       const idx = cards.findIndex((card) => card.name === targetName);
       if (idx !== -1) {
         cards.splice(idx, 1, replacement);
+        // The play-card offering carries a parallel `enabled` array (greyed vs
+        // playable). Recompute the swapped slot so the new card isn't left with
+        // the replaced card's disabled flag.
+        if (selectCard instanceof SelectProjectCardToPlay && selectCard.config?.enabled !== undefined) {
+          const enabled = [...selectCard.config.enabled];
+          enabled[idx] = this.canPlay(replacement as IProjectCard);
+          selectCard.config = {...selectCard.config, enabled};
+        }
       }
     }
     this.deckForCard(target).drawPile.push(target);
@@ -1614,13 +1622,13 @@ export class Player implements IPlayer {
   // card-bearing input qualifies: SelectCard (buy/select screens) as well as
   // SelectCardToPlay / SelectProjectCardToPlay (the play-from-hand action),
   // which all expose a `cards` array.
-  private findSelectCardOffering(input: PlayerInput | undefined, cardName: CardName): {cards: Array<ICard>} | undefined {
+  private findSelectCardOffering(input: PlayerInput | undefined, cardName: CardName): PlayerInput | undefined {
     if (input === undefined) {
       return undefined;
     }
     const cards = (input as {cards?: ReadonlyArray<ICard>}).cards;
     if (Array.isArray(cards) && cards.some((card) => card.name === cardName)) {
-      return input as unknown as {cards: Array<ICard>};
+      return input;
     }
     const options = (input as {options?: ReadonlyArray<PlayerInput>}).options;
     if (Array.isArray(options)) {
