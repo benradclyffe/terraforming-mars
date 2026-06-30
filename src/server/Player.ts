@@ -1561,37 +1561,37 @@ export class Player implements IPlayer {
   // behind a preference; the swap itself only ever pulls cards genuinely in the
   // deck, so it cannot conjure cards from nothing.
   public replaceDealtCard(targetName: CardName, replacementName: CardName): void {
-    // Case 1: the card is already in hand. Checked first because while it's the
-    // player's turn the action menu also offers hand cards (Play a card), and we
-    // want a hand replacement to actually change the hand.
+    // The same card can live in two places at once: in hand AND in a live
+    // offering. While it's the player's turn the action menu's play-a-card
+    // input (SelectProjectCardToPlay) holds a separate [...hand] copy. Both
+    // must be updated with the SAME replacement instance, or whichever copy is
+    // left stale keeps showing the old card and a retry double-processes it
+    // (taking the replacement out of the deck twice and erroring).
     const handIdx = this.cardsInHand.findIndex((card) => card.name === targetName);
-    if (handIdx !== -1) {
-      const target = this.cardsInHand[handIdx];
-      const replacement = this.takeReplacementFromDeck(target, replacementName);
-      this.cardsInHand[handIdx] = replacement as IProjectCard;
-      this.deckForCard(target).drawPile.push(target);
-      return;
+    const selectCard = this.findSelectCardOffering(this.waitingFor, targetName);
+    if (handIdx === -1 && selectCard === undefined) {
+      throw new InputError(`${targetName} is not currently offered or in hand`);
     }
 
-    // Case 2: the card is one currently offered for selection (e.g. the initial
-    // cards / research buy screen, where it isn't in hand yet). Mutate the cards
-    // array in place: a SelectCard's array is often the same object as e.g.
-    // player.dealtProjectCards or the drawn-cards closure, so reassigning it
-    // would leave those other references (and the displayed list) stale.
-    const selectCard = this.findSelectCardOffering(this.waitingFor, targetName);
+    const target = handIdx !== -1 ?
+      this.cardsInHand[handIdx] :
+      (selectCard as {cards: Array<ICard>}).cards.find((card) => card.name === targetName) as ICard;
+    const replacement = this.takeReplacementFromDeck(target, replacementName);
+
+    if (handIdx !== -1) {
+      this.cardsInHand[handIdx] = replacement as IProjectCard;
+    }
     if (selectCard !== undefined) {
+      // Mutate the offering's array in place: it is often the same object as
+      // player.dealtProjectCards or a drawn-cards closure, so reassigning it
+      // would leave those other references (and the displayed list) stale.
       const cards = selectCard.cards as Array<ICard>;
       const idx = cards.findIndex((card) => card.name === targetName);
       if (idx !== -1) {
-        const target = cards[idx];
-        const replacement = this.takeReplacementFromDeck(target, replacementName);
         cards.splice(idx, 1, replacement);
-        this.deckForCard(target).drawPile.push(target);
-        return;
       }
     }
-
-    throw new InputError(`${targetName} is not currently offered or in hand`);
+    this.deckForCard(target).drawPile.push(target);
   }
 
   private takeReplacementFromDeck(target: ICard, replacementName: CardName): ICard {
@@ -1604,15 +1604,17 @@ export class Player implements IPlayer {
   }
 
   // Walks the waiting-for input tree (OrOptions / AndOptions / SelectInitialCards
-  // all expose `options`) for a SelectCard currently offering the named card.
-  private findSelectCardOffering(input: PlayerInput | undefined, cardName: CardName): SelectCard<ICard> | undefined {
+  // all expose `options`) for an input currently offering the named card. Any
+  // card-bearing input qualifies: SelectCard (buy/select screens) as well as
+  // SelectCardToPlay / SelectProjectCardToPlay (the play-from-hand action),
+  // which all expose a `cards` array.
+  private findSelectCardOffering(input: PlayerInput | undefined, cardName: CardName): {cards: Array<ICard>} | undefined {
     if (input === undefined) {
       return undefined;
     }
-    if (input instanceof SelectCard) {
-      if (input.cards.some((card) => card.name === cardName)) {
-        return input as SelectCard<ICard>;
-      }
+    const cards = (input as {cards?: ReadonlyArray<ICard>}).cards;
+    if (Array.isArray(cards) && cards.some((card) => card.name === cardName)) {
+      return input as unknown as {cards: Array<ICard>};
     }
     const options = (input as {options?: ReadonlyArray<PlayerInput>}).options;
     if (Array.isArray(options)) {

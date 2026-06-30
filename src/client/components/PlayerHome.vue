@@ -82,6 +82,7 @@
 
       <Drawer v-if="openDrawer === 'hand'" :open="true" side="bottom" title="Cards in hand" @close="closeDrawer">
         <SelectProjectCardToPlay v-if="playCardOption !== undefined"
+          :key="playCardOptionKey"
           :playerView="playerView"
           :playerinput="playCardOption.option"
           :onsave="onPlayCard"
@@ -352,6 +353,12 @@ export default defineComponent({
         }
       }
       return undefined;
+    },
+    // SelectProjectCardToPlay snapshots its card list in data(), so it must
+    // remount when the hand changes (e.g. a sandbox card swap) to show the
+    // updated cards rather than the stale snapshot.
+    playCardOptionKey(): string {
+      return this.playCardOption?.option.cards.map((c) => c.name).join(',') ?? '';
     },
     convertResources(): Partial<Record<Resource, number>> {
       const result: Partial<Record<Resource, number>> = {};

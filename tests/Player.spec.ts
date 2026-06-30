@@ -784,6 +784,31 @@ describe('Player', () => {
       expect(deck.drawPile.map((c) => c.name)).to.not.include(replacement.name);
     });
 
+    it('updates both the hand and the live play-card offering when a hand card is also being offered', () => {
+      // Reproduces the play-from-hand drawer: the action menu's SelectProjectCardToPlay
+      // holds a separate [...hand] copy. Replacing must update both, or the drawer
+      // shows the old card and a retry double-processes and fails.
+      const [game, player] = testGame(1);
+      const deck = game.projectDeck;
+      const inHand = deck.drawOrThrow(game);
+      player.cardsInHand.push(inHand);
+      const replacement = deck.drawPile[0];
+      // A distinct copy of the hand, as getActions builds for the play-card option.
+      const select = new SelectProjectCardToPlay(player, [...player.cardsInHand]);
+      expect(select.cards).to.not.equal(player.cardsInHand);
+      player.setWaitingFor(select);
+
+      player.replaceDealtCard(inHand.name, replacement.name);
+
+      expect(player.cardsInHand.map((c) => c.name)).to.include(replacement.name);
+      expect(player.cardsInHand.map((c) => c.name)).to.not.include(inHand.name);
+      expect(select.cards.map((c) => c.name)).to.include(replacement.name);
+      expect(select.cards.map((c) => c.name)).to.not.include(inHand.name);
+      // The target returns to the deck exactly once; the replacement leaves it.
+      expect(deck.drawPile.filter((c) => c.name === inHand.name)).to.have.length(1);
+      expect(deck.drawPile.map((c) => c.name)).to.not.include(replacement.name);
+    });
+
     it('finds the project SelectCard nested in SelectInitialCards', () => {
       const [game, player] = testGame(1, {skipInitialCardSelection: false});
       const deck = game.projectDeck;
