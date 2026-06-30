@@ -1596,11 +1596,17 @@ export class Player implements IPlayer {
 
   private takeReplacementFromDeck(target: ICard, replacementName: CardName): ICard {
     const deck = this.deckForCard(target);
-    const replacementIdx = deck.drawPile.findIndex((card) => card.name === replacementName);
-    if (replacementIdx === -1) {
-      throw new InputError(`${replacementName} is not in the deck (already drawn or in play)`);
+    // A replacement can sit in either pile: the draw pile, or the discard pile
+    // (a previously discarded/played card not yet reshuffled). Take it from
+    // wherever it is. If it's in neither, it's in play or in a hand and can't
+    // be pulled.
+    for (const pile of [deck.drawPile, deck.discardPile]) {
+      const idx = pile.findIndex((card) => card.name === replacementName);
+      if (idx !== -1) {
+        return pile.splice(idx, 1)[0];
+      }
     }
-    return deck.drawPile.splice(replacementIdx, 1)[0];
+    throw new InputError(`${replacementName} is not available (it is in play or in a hand)`);
   }
 
   // Walks the waiting-for input tree (OrOptions / AndOptions / SelectInitialCards

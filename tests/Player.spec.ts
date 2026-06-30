@@ -766,7 +766,7 @@ describe('Player', () => {
       player.setWaitingFor(select);
 
       // offered[0] was drawn out of the deck, so it is not a valid replacement.
-      expect(() => player.replaceDealtCard(offered[0].name, offered[0].name)).to.throw(/not in the deck/i);
+      expect(() => player.replaceDealtCard(offered[0].name, offered[0].name)).to.throw(/not available/i);
     });
 
     it('replaces a card already in hand when no card selection is active', () => {
@@ -807,6 +807,23 @@ describe('Player', () => {
       // The target returns to the deck exactly once; the replacement leaves it.
       expect(deck.drawPile.filter((c) => c.name === inHand.name)).to.have.length(1);
       expect(deck.drawPile.map((c) => c.name)).to.not.include(replacement.name);
+    });
+
+    it('can pull a replacement from the discard pile, not just the draw pile', () => {
+      const [game, player] = testGame(1);
+      const deck = game.projectDeck;
+      const inHand = deck.drawOrThrow(game);
+      player.cardsInHand.push(inHand);
+      // Move a known card from the draw pile into the discard pile.
+      const replacement = deck.drawOrThrow(game);
+      deck.discard(replacement);
+      expect(deck.drawPile.map((c) => c.name)).to.not.include(replacement.name);
+      expect(deck.discardPile.map((c) => c.name)).to.include(replacement.name);
+
+      player.replaceDealtCard(inHand.name, replacement.name);
+
+      expect(player.cardsInHand.map((c) => c.name)).to.include(replacement.name);
+      expect(deck.discardPile.map((c) => c.name)).to.not.include(replacement.name);
     });
 
     it('finds the project SelectCard nested in SelectInitialCards', () => {
